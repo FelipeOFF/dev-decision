@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dev-decision-client"
+version = "0.1.0"
+description = "Public clients and harness integrations for Dev Decision"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx2>=2.13.0",
+    "mcp==2.2.0",
+    "pydantic>=2.13.5",
+]
+
+[project.scripts]
+dev-decision = "dev_decision.public_cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dev_decision"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/dev_decision", "README.md", "LICENSE"]

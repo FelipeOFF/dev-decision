@@ -1,0 +1,39 @@
+---
+name: grill-with-jev
+description: Resolve specification questions from authorized project evidence through the Dev Decision MCP, escalating only business choices, authorizations, and persistent gaps. Use when clarifying scope before writing a spec.
+---
+
+# Grill with Jev
+
+Collect the objective, applicable rules, current artifact, explicit alternatives,
+and evidence with its source and revision. Exclude secrets, session transcripts,
+and material outside the authorized project roots.
+
+Work through the unresolved frontier one question at a time:
+
+1. Offer stable public option IDs. A recommendation is evidence, not a forced
+   answer; accept a different option when Jev selects it through a calibrated
+   gate.
+2. Call `grill_start` once, then `grill_continue` for each question. Preserve
+   the returned run ID, revision, evaluation origin, context revision, and
+   evidence references.
+3. If an evaluation requests more context, collect material evidence and retry
+   the same question ID. A retry must add a new evidence revision. Do not
+   paraphrase the same source to manufacture novelty.
+4. Stop after three evaluations of one question. A stalled retry or unresolved
+   third evaluation stays in human review.
+5. Send business policy choices, authorizations, personal facts, ambiguous
+   options, and persistent gaps to the human. Never weaken a declared human
+   restriction to obtain an automatic choice.
+
+Treat `action=auto` as an automated recommendation only when the server reports
+a real calibrated gate. `origin=automated` is not a user answer. Mock, recorded,
+uncalibrated, abstaining, and error results stay in review.
+
+Do not interrupt the user for each automated decision. At the end, call
+`grill_summary` and show a compact list containing the question, selected option,
+origin, evidence sources, and remaining gaps. Keep the complete server record
+available for `to-spec-jev`.
+
+Finish only when every active question is resolved, required authorizations were
+granted, and no gap or stale decision remains.

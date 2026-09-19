@@ -1,0 +1,16 @@
+{
+  "name": "@felipeoff/dev-decision",
+  "version": "0.1.0",
+  "description": "Bootstrap do cliente Python Dev Decision",
+  "license": "MIT",
+  "bin": {
+    "dev-decision": "bin/dev-decision.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "LICENSE"
+  ]
+}

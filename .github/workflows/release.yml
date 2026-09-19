@@ -1,0 +1,44 @@
+name: Publish stable release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: Verify synchronized versions
+        run: python scripts/verify_release.py
+      - name: Build and hash artifacts
+        run: |
+          uv build
+          npm pack ./launcher --pack-destination dist
+          cd dist && sha256sum * > SHA256SUMS
+      - name: Store verifiable artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ github.event.release.tag_name }}
+          path: dist/
+      - name: Publish Python package with trusted provenance
+        run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz
+      - name: Publish npm package with provenance
+        run: npm publish ./launcher --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
