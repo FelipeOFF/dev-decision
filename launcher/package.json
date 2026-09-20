@@ -1,7 +1,7 @@
 {
   "name": "@felipeoff/dev-decision",
   "version": "0.1.0",
-  "description": "Bootstrap do cliente Python Dev Decision",
+  "description": "Harness plugin for evidence-backed decisions with Jev",
   "license": "MIT",
   "bin": {
     "dev-decision": "bin/dev-decision.js"
