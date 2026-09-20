@@ -1,13 +1,14 @@
 {
   "files": {
-    ".github/workflows/release.yml": "fac9af15548261ffc14af88361531e407e46b458143004ff999cfe3a3dc9790e",
+    ".github/workflows/release.yml": "fdf8601785f60244054e81b2f0d8ea5d472f9ad199d8f159dbb9243c847102ee",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "9aef8c33cd015d73f3e0e953bbed4ba0ae19c39db88c9ce8a2991df552308cfc",
+    "README.md": "ab7085bd315a5060ffa17e45011504c02a8d4608ede37dbc39a74f90a12c84d5",
     "launcher/LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "launcher/bin/dev-decision.js": "ddabb30b975936e776db0160d37ec46d4f5214e57187143f8c01ab7192bb62c2",
+    "launcher/bin/dev-decision.js": "c91215a83f28084e7a17dac780b5b5192629e9db51cf64353a533d0fd84e199e",
     "launcher/package.json": "c5fe93cfd424a2aebd078c32055d4f4ec316f64bda27f3bad8dceefd614d124f",
+    "package.json": "9a28290c07fec199b19efb6a626d0696523fc1fc1e1e1bea955c20a5efcd8311",
     "pyproject.toml": "2facbf7021fde86a3c38a30c3b9c2dd680c88d5fbf71da413446a55a8cd9e168",
-    "scripts/verify_release.py": "82c16c2ad2196047f30f79c2c2e2430444212d9c512915114fb935c34202fe8b",
+    "scripts/verify_release.py": "d2f7798745d26b800a0da0f44cccd35fb725da715847ce4de71e396c1316ae3b",
     "src/dev_decision/claude_hook.py": "545393d781d32de35ac98a1a5ae5c77146aded0b7e1379cb8d10baef6697bbad",
     "src/dev_decision/claude_setup.py": "e4efc839d401968ab40a9ec264c48168fcd4a4bf30758ad915317d4e40f3fc52",
     "src/dev_decision/client.py": "dfda58fc3549083b2ba7795425d40cbfc3fca32f5cac92384e5ab3b7651c12d7",
@@ -22,7 +23,7 @@
     "src/dev_decision/grok_build_setup.py": "e603e9146d4b434e9f657a05918c7aa234e25ad287cc8c02ddbfc7fbe3a582f2",
     "src/dev_decision/privacy.py": "4465638b65b658f0302f2a29487582bcfd6937cf6a15d6b951236c1729b802a6",
     "src/dev_decision/protocol.py": "c27efbdab43661fa9c886485b92657a40db1d217ec9fa217f56604899ce29ebc",
-    "src/dev_decision/public_cli.py": "7cfd3118feec761a53da4d1828307d948801f7fa35319187dcd06ce8a3b639fe",
+    "src/dev_decision/public_cli.py": "2246857160aad079bda36bdfaa9381908abac7f1c9c9330117f7fe46e7e7b5a2",
     "src/dev_decision/public_gate_revision.py": "5d2df69108c5af711026b53b586bc65afa45d181120a116e5ad8910e53f553db",
     "src/dev_decision/public_setup.py": "81597d93283a031b9f897e8e730cdbd2d7bdeb2f8275bb6aa1d9942bdd6fd472",
     "src/dev_decision/recipe_inputs.py": "6084a73064bcc5fc15a2d76b75040a4042b4a506f5ad7eaf7d5310f1b18d4b45",
@@ -48,8 +49,8 @@
   },
   "provenance": {
     "generator": "scripts/export_public_release.py",
-    "source_repository": "FelipeOFF/dev-decision-plugin",
-    "source_revision": "c3449979e3bad9f948cedc35eb7ec36915546101"
+    "source_repository": "FelipeOFF/dev-decision-server-mcp",
+    "source_revision": "505fe2ece97ab96275b61c75a18454b190acb031"
   },
   "schema": 1,
   "version": "0.1.0"
