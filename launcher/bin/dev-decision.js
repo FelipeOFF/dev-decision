@@ -16,8 +16,22 @@ const venv = join(root, "venv");
 const runtime = join(venv, "bin", "python");
 const statePath = join(root, "current.json");
 const version = require("../package.json").version;
+
+function publicClientRoot() {
+  const candidates = [join(__dirname, "..", ".."), join(__dirname, "..")];
+  for (const candidate of candidates) {
+    const file = join(candidate, "pyproject.toml");
+    if (!existsSync(file)) continue;
+    const text = readFileSync(file, "utf8");
+    if (/^name\s*=\s*"dev-decision-client"/m.test(text)) return candidate;
+  }
+  return null;
+}
+
+const bundledClient = publicClientRoot();
 const packageName =
   process.env.DEV_DECISION_PYTHON_PACKAGE ||
+  bundledClient ||
   `dev-decision-client==${version}`;
 
 function run(command, args) {

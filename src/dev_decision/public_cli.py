@@ -1,15 +1,20 @@
 """Interactive entry point used by the npm bootstrap."""
 
+from __future__ import annotations
+
 import argparse
 import asyncio
 import getpass
 import json
 import os
+import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 from dev_decision.client import ReviewRequest
 from dev_decision.public_setup import (
+    HarnessName,
     detect_public_harnesses,
     doctor_public_harnesses,
     install_public_harnesses,
@@ -20,6 +25,120 @@ from dev_decision.public_setup import (
 )
 from dev_decision.routing import route_skills
 from dev_decision.transport import call_tool, negotiate_protocol
+
+_HARNESS_SETUP_HINTS = {
+    "codex": "Codex — app-server controlado",
+    "claude-code": "Claude Code — hooks nativos (UserPromptSubmit, PreToolUse)",
+    "cursor": "Cursor — ACP controlado",
+    "grok-build": "Grok Build — ACP controlado",
+    "grok-bot": (
+        "Grok Bot — cooperativo: copie GROK_BOT.md e anexe o Custom MCP; "
+        "sem interceptação obrigatória"
+    ),
+}
+
+
+def public_harness_setup_hints() -> dict[str, str]:
+    """Return the installer line shown for each supported harness."""
+    return dict(_HARNESS_SETUP_HINTS)
+
+
+def _ask(prompt: str, stdin: TextIO, stderr: TextIO) -> str:
+    print(prompt, end="", file=stderr, flush=True)
+    return stdin.readline()
+
+
+def prompt_harness_selection(
+    available: Sequence[HarnessName],
+    *,
+    stdin: TextIO,
+    stderr: TextIO,
+) -> tuple[HarnessName, ...]:
+    """Toggle detected harnesses; empty input confirms the current selection."""
+    if not available:
+        print(
+            "Nenhum harness suportado foi detectado nesta máquina.",
+            file=stderr,
+        )
+        return ()
+    selected = set(available)
+    names = tuple(available)
+    while True:
+        print(
+            "Harnesses detectados. Números alternam a seleção; Enter confirma.",
+            file=stderr,
+        )
+        print(file=stderr)
+        for index, name in enumerate(names, start=1):
+            mark = "x" if name in selected else " "
+            print(
+                f"  [{mark}] {index}  {_HARNESS_SETUP_HINTS[name]}",
+                file=stderr,
+            )
+        print(file=stderr)
+        line = _ask("Toggle (números) ou Enter para continuar: ", stdin, stderr)
+        if line == "" or not line.strip():
+            break
+        for token in line.replace(",", " ").split():
+            if not token.isdigit() or not 1 <= int(token) <= len(names):
+                print(f"Valor inválido: {token}", file=stderr)
+                continue
+            name = names[int(token) - 1]
+            if name in selected:
+                selected.remove(name)
+            else:
+                selected.add(name)
+    if not selected:
+        print("Nenhum harness selecionado.", file=stderr)
+        return ()
+    return tuple(name for name in names if name in selected)
+
+
+def select_harnesses(
+    *,
+    available: Sequence[HarnessName],
+    requested: Sequence[str] | None,
+    accept_all: bool,
+    stdin: TextIO,
+    stderr: TextIO,
+) -> tuple[HarnessName, ...]:
+    """Resolve harnesses from flags or the interactive toggle prompt."""
+    names = tuple(available)
+    if requested:
+        missing = sorted(set(requested) - set(names))
+        if missing:
+            raise ValueError("Harnesses not found: " + ", ".join(missing))
+        wanted = set(requested)
+        return tuple(name for name in names if name in wanted)
+    if accept_all:
+        return names
+    return prompt_harness_selection(names, stdin=stdin, stderr=stderr)
+
+
+def prompt_host(
+    raw: str | None,
+    *,
+    stdin: TextIO,
+    stderr: TextIO,
+) -> str:
+    """Read the MCP origin if it was not passed as --host."""
+    if raw is None:
+        raw = _ask("Host HTTPS do MCP: ", stdin, stderr).strip()
+    return _endpoint(raw)
+
+
+def prompt_api_key(
+    *,
+    stdin: TextIO,
+    stderr: TextIO,
+    environ: Mapping[str, str] | None = None,
+    get_pass: Any = getpass.getpass,
+) -> str:
+    """Prefer DEV_DECISION_MCP_API_KEY; otherwise prompt without echo."""
+    env = (environ or os.environ).get("DEV_DECISION_MCP_API_KEY")
+    if env:
+        return env
+    return str(get_pass("API key do MCP: "))
 
 
 def _bundled_skills() -> Path:
@@ -117,38 +236,33 @@ def main() -> None:
 
     try:
         if args.command == "install":
-            available = detect_public_harnesses()
-            if args.harness:
-                missing = sorted(set(args.harness) - set(available))
-                if missing:
-                    raise ValueError(
-                        "Harnesses not found: " + ", ".join(missing)
-                    )
-                selected = tuple(args.harness)
-            elif args.yes:
-                selected = available
-            else:
-                selected = tuple(
-                    name
-                    for name in available
-                    if input(f"Instalar integração global de {name}? [Y/n] ")
-                    .strip()
-                    .lower()
-                    not in {"n", "no", "não", "nao"}
-                )
+            selected = select_harnesses(
+                available=detect_public_harnesses(),
+                requested=args.harness,
+                accept_all=args.yes,
+                stdin=sys.stdin,
+                stderr=sys.stderr,
+            )
             if not selected:
                 print(json.dumps({"installed": False, "harnesses": []}))
                 return
-            host = _endpoint(args.host or input("Host HTTPS do MCP: ").strip())
-            api_key = os.environ.get("DEV_DECISION_MCP_API_KEY") or getpass.getpass(
-                "API key do MCP: "
-            )
-            result: Any = install_public_harnesses(
+            host = prompt_host(args.host, stdin=sys.stdin, stderr=sys.stderr)
+            api_key = prompt_api_key(stdin=sys.stdin, stderr=sys.stderr)
+            result = install_public_harnesses(
                 _bundled_skills(),
                 host,
                 api_key,
                 selected,
             )
+            try:
+                result["doctor"] = asyncio.run(
+                    doctor_public_harnesses(Path.cwd())
+                )
+            except (ValueError, OSError, ExceptionGroup) as error:
+                result["doctor"] = {
+                    "status": "configured_unverified",
+                    "error": str(error),
+                }
         elif args.command == "doctor":
             result = asyncio.run(
                 doctor_public_harnesses(

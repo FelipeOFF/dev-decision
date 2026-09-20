@@ -11,7 +11,13 @@ python_version = tomllib.loads((root / "pyproject.toml").read_text())["project"]
     "version"
 ]
 npm_version = json.loads((root / "launcher/package.json").read_text())["version"]
-if len({manifest["version"], python_version, npm_version}) != 1:
+root_package = root / "package.json"
+root_npm_version = (
+    json.loads(root_package.read_text())["version"]
+    if root_package.is_file()
+    else npm_version
+)
+if len({manifest["version"], python_version, npm_version, root_npm_version}) != 1:
     raise SystemExit("Python, npm and manifest versions differ.")
 for relative, expected in manifest["files"].items():
     actual = hashlib.sha256((root / relative).read_bytes()).hexdigest()

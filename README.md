@@ -20,13 +20,13 @@
 This repository is the MIT client: npm launcher, Python package, skills and harness adapters. It does not contain the MCP server, prompts, calibration or API-key admin.
 
 ```
-npx @felipeoff/dev-decision install --host https://YOUR_MCP/mcp
+npx @felipeoff/dev-decision install
 npx @felipeoff/dev-decision doctor --project .
 ```
 
 Then start `codex`, `claude`, Cursor, `grok` or Grok Bot as usual. That is the whole setup.
 
-macOS or Linux, Python 3.12+. Node 18 is only the bootstrap; the product runtime is Python. The installer detects the harnesses on this machine, asks which ones to wire, and stores the MCP API key in an owner-only file. Never pass the key on the command line.
+macOS or Linux, Python 3.12+. Node 18 is only the bootstrap; the product runtime is Python. The installer lists the harnesses on this machine with their limits, lets you toggle each one, asks for the MCP host and API key, and stores the key in an owner-only file. Never pass the key on the command line. `--harness` and `--host` skip those prompts; `--yes` takes every detected harness.
 
 ## What it does
 

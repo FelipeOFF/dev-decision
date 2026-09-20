@@ -1,0 +1,20 @@
+{
+  "name": "@felipeoff/dev-decision",
+  "version": "0.1.0",
+  "description": "Harness plugin for evidence-backed decisions with Jev",
+  "license": "MIT",
+  "bin": {
+    "dev-decision": "launcher/bin/dev-decision.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "launcher/bin",
+    "launcher/LICENSE",
+    "src/dev_decision",
+    "pyproject.toml",
+    "LICENSE",
+    "README.md"
+  ]
+}
