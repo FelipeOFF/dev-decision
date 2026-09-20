@@ -17,6 +17,8 @@
 
 ---
 
+This repository is the MIT client: npm launcher, Python package, skills and harness adapters. It does not contain the MCP server, prompts, calibration or API-key admin.
+
 ```
 npx @felipeoff/dev-decision install --host https://YOUR_MCP/mcp
 npx @felipeoff/dev-decision doctor --project .
@@ -30,14 +32,14 @@ macOS or Linux, Python 3.12+. Node 18 is only the bootstrap; the product runtime
 
 A coding agent can write a spec, open tickets and implement a slice without ever deciding a typed question against project evidence. Grill questions become chat. Acceptance criteria become prose. A "looks good" from the same model that wrote the patch is not a verdict.
 
-Dev Decision is the harness plugin for that gap. It installs skills and a private MCP client into the agents you already use. The harness keeps writing. [Jev](https://docs.typesafe.ai/concepts/system-one), TypeSafe's decision model, answers a typed question about the evidence you authorized: a choice, a claim, a screen, a ranking. The MCP call stays attached to the turn. There is no daemon, no callback later, no merge from a model.
+This package installs skills and an MCP client into the agents you already use. The harness keeps writing. [Jev](https://docs.typesafe.ai/concepts/system-one), TypeSafe's decision model, answers a typed question about the evidence you authorized: a choice, a claim, a screen, a ranking. The MCP call stays attached to the turn. There is no daemon, no callback later, no merge from a model.
 
 - One install for every harness it finds. `--harness` selects; `--yes` takes all of them.
 - Skills ship in English and run the same flow everywhere: `grill-with-jev` → `to-spec-jev` → `to-tickets-jev` → `implement-spec-jev` → `verify-spec-jev`.
-- Your MCP host, your API key. Model keys stay on the server. The plugin never logs the credential.
+- Your MCP host, your API key. Model keys stay on the server. This package never logs the credential.
 - If the MCP is down, the harness still runs. The decision stays in human review. One warning per session.
 
-Automatic advance stays off until an operator installs a real calibration gate. Mock, replay and contract fixtures do not open it.
+Automatic advance stays off until the host operator installs a real calibration gate. Mock, replay and contract fixtures do not open it.
 
 ## Why a decision model
 
@@ -96,21 +98,32 @@ Original binaries stay on `PATH`. Wrappers inject `DEV_DECISION_MCP_API_KEY` int
 
 There is no auto-update. A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed.
 
-From a source checkout of this client:
+From a clone of this repository:
 
 ```
-PYTHONPATH=src python3 -m dev_decision.public_cli install --host https://YOUR_MCP/mcp
-PYTHONPATH=src python3 -m dev_decision.public_cli doctor --project .
+python3 -m venv .venv
+.venv/bin/pip install .
+.venv/bin/dev-decision install --host https://YOUR_MCP/mcp
+.venv/bin/dev-decision doctor --project .
 ```
 
-## Privacy, safety, gates
+## This repository
+
+| Path | What |
+| --- | --- |
+| `launcher/` | `npx @felipeoff/dev-decision` |
+| `src/dev_decision/` | Public Python client and harness adapters |
+| `src/dev_decision/skills/` | `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev` |
+| `scripts/verify_release.py` | Version lock and SHA-256 of the exported tree |
+
+## Privacy and safety
 
 - The API key is never a flag, never in harness config, never logged. Lookups: the credential file, or `DEV_DECISION_MCP_API_KEY` for local automation (still written only to that file).
 - Wrappers live in `~/.local/bin/dev-decision-*`. Profile: `~/.config/dev-decision/profiles/default.json`. Python runtime: `~/.local/share/dev-decision`.
 - Context sent to the MCP is the evidence you authorized for that call. Model provider keys never leave the server process.
 - The client talks to the host over HTTPS (HTTP only on loopback) and uses the system CAs.
 - No MCP, auth failure, or a protocol major mismatch: the harness continues and the decision stays in review.
-- `action=auto` is not permission to merge, deploy, or publish. Without an installed calibration manifest the server reports `calibrated=false` and `auto_advance=false`.
+- `action=auto` is not permission to merge, deploy, or publish. Without a calibration manifest on the host the server reports `calibrated=false` and `auto_advance=false`.
 
 ## Uninstall
 
@@ -122,4 +135,4 @@ Removes the managed profile, credential, wrappers and skills this plugin wrote. 
 
 ## License
 
-The public client (`@felipeoff/dev-decision`, `dev-decision-client`) is [MIT](https://github.com/FelipeOFF/dev-decision/blob/master/LICENSE). The MCP server, prompts, calibration and API-key administration stay in the private host repository.
+[MIT](LICENSE)

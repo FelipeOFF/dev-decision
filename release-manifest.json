@@ -2,7 +2,7 @@
   "files": {
     ".github/workflows/release.yml": "fac9af15548261ffc14af88361531e407e46b458143004ff999cfe3a3dc9790e",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "98b331cf296e3eed38978ef786f1e8bad512476e322b9e97e3091be82032c90c",
+    "README.md": "9aef8c33cd015d73f3e0e953bbed4ba0ae19c39db88c9ce8a2991df552308cfc",
     "launcher/LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
     "launcher/bin/dev-decision.js": "ddabb30b975936e776db0160d37ec46d4f5214e57187143f8c01ab7192bb62c2",
     "launcher/package.json": "c5fe93cfd424a2aebd078c32055d4f4ec316f64bda27f3bad8dceefd614d124f",
