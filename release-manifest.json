@@ -2,10 +2,10 @@
   "files": {
     ".github/workflows/release.yml": "fac9af15548261ffc14af88361531e407e46b458143004ff999cfe3a3dc9790e",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "4ba69757dc8f7113ab18aa11f5ae595ca8c90be7ff15135d22114cabe27b542c",
+    "README.md": "98b331cf296e3eed38978ef786f1e8bad512476e322b9e97e3091be82032c90c",
     "launcher/LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
     "launcher/bin/dev-decision.js": "ddabb30b975936e776db0160d37ec46d4f5214e57187143f8c01ab7192bb62c2",
-    "launcher/package.json": "d5cedb25ff5b8f659ab4a6cf365a0d290767a5e0b21fd8e3ea9ea1a03aede47b",
+    "launcher/package.json": "c5fe93cfd424a2aebd078c32055d4f4ec316f64bda27f3bad8dceefd614d124f",
     "pyproject.toml": "2facbf7021fde86a3c38a30c3b9c2dd680c88d5fbf71da413446a55a8cd9e168",
     "scripts/verify_release.py": "82c16c2ad2196047f30f79c2c2e2430444212d9c512915114fb935c34202fe8b",
     "src/dev_decision/claude_hook.py": "545393d781d32de35ac98a1a5ae5c77146aded0b7e1379cb8d10baef6697bbad",
