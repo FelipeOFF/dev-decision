@@ -163,7 +163,11 @@ def prompt_api_key(
     env = mcp_api_key(environ)
     if env:
         return env
-    return str(get_pass("API key do MCP: "))
+    try:
+        return str(get_pass("API key do MCP: "))
+    except (EOFError, KeyboardInterrupt):
+        print("\nCancelado.", file=stderr)
+        raise SystemExit(130) from None
 
 
 def _bundled_skills() -> Path:
@@ -173,7 +177,9 @@ def _bundled_skills() -> Path:
     if configured:
         return Path(configured)
     packaged = Path(__file__).with_name("skills")
-    return packaged if packaged.is_dir() else Path(__file__).resolve().parents[2] / "skill"
+    return (
+        packaged if packaged.is_dir() else Path(__file__).resolve().parents[2] / "skill"
+    )
 
 
 def _endpoint(value: str) -> str:
@@ -282,20 +288,34 @@ def main() -> None:
                 selected,
             )
             try:
-                result["doctor"] = asyncio.run(
-                    doctor_public_harnesses(Path.cwd())
-                )
-            except (ValueError, OSError, ExceptionGroup) as error:
+                result["doctor"] = asyncio.run(doctor_public_harnesses(Path.cwd()))
+            except (ValueError, OSError, ExceptionGroup, RuntimeError) as error:
                 result["doctor"] = {
                     "status": "configured_unverified",
                     "error": str(error),
                 }
         elif args.command == "doctor":
-            result = asyncio.run(
-                doctor_public_harnesses(
-                    args.project, timeout_seconds=args.timeout
+            try:
+                result = asyncio.run(
+                    doctor_public_harnesses(args.project, timeout_seconds=args.timeout)
                 )
-            )
+            except (ValueError, OSError, ExceptionGroup, RuntimeError) as error:
+                print(
+                    json.dumps(
+                        {"ok": False, "error": str(error)},
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                )
+                raise SystemExit(1) from None
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            harnesses = result.get("harnesses")
+            if isinstance(harnesses, dict) and any(
+                isinstance(report, dict) and report.get("usable") is False
+                for report in harnesses.values()
+            ):
+                raise SystemExit(1)
+            return
         elif args.command == "update":
             result = update_public_harnesses(_bundled_skills())
         elif args.command == "smoke":

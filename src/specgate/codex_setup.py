@@ -74,7 +74,9 @@ def _mcp_matches(config: dict[str, object], url: str) -> bool:
 
 
 def _mcp_usable(config: dict[str, object], url: str) -> bool:
-    disabled = config.get("disabled_tools", [])
+    disabled = config.get("disabled_tools")
+    if disabled is None:
+        disabled = []
     enabled = config.get("enabled_tools")
     return bool(
         _mcp_matches(config, url)

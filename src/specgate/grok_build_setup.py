@@ -38,7 +38,7 @@ _REQUIRED_TOOLS = {"jev_decide", "jev_find", "jev_screen", "jev_verify"}
 
 class GrokBuildSetupReport(TypedDict):
     skill: Literal["created", "unchanged", "removed", "preserved", "absent"]
-    mcp: Literal["created", "unchanged", "removed", "preserved", "absent"]
+    mcp: Literal["created", "unchanged", "updated", "removed", "preserved", "absent"]
 
 
 def _run(command: Sequence[str], *args: str) -> subprocess.CompletedProcess[str]:
@@ -76,25 +76,29 @@ def _write_marker(path: Path, manifest: dict[str, object]) -> None:
         (path / name).unlink(missing_ok=True)
 
 
-def _install_native_mcp(skill_root: Path, url: str) -> Literal["created", "unchanged"]:
+def _install_native_mcp(
+    skill_root: Path, url: str, *, token: str | None = None
+) -> Literal["created", "unchanged"]:
     root = _catalog_root(skill_root)
-    status = merge_grok_config(root / "config.toml", url)
-    created = status == "created"
+    status = merge_grok_config(root / "config.toml", url, token=token)
+    created = status in {"created", "updated"}
     mcp_json = root / "mcp.json"
-    if mcp_json.is_file() and merge_json_mcp(mcp_json, url, include_type=False) == "created":
+    if mcp_json.is_file() and merge_json_mcp(
+        mcp_json, url, include_type=False, token=token
+    ) in {"created", "updated"}:
         created = True
     return "created" if created else "unchanged"
 
 
 def _remove_native_mcp(
     skill_root: Path, url: str, *, created: bool
-) -> Literal["created", "unchanged", "removed", "preserved", "absent"]:
+) -> Literal["created", "unchanged", "updated", "removed", "preserved", "absent"]:
     root = _catalog_root(skill_root)
     toml_status = remove_grok_config(root / "config.toml", url, created=created)
     mcp_json = root / "mcp.json"
-    json_status: Literal["created", "unchanged", "removed", "preserved", "absent"] = (
-        "absent"
-    )
+    json_status: Literal[
+        "created", "unchanged", "updated", "removed", "preserved", "absent"
+    ] = "absent"
     if mcp_json.is_file():
         json_status = remove_json_mcp(
             mcp_json, url, created=created, include_type=False
@@ -109,7 +113,9 @@ def _remove_native_mcp(
     return toml_status
 
 
-def install_grok_build(source: Path, skill_root: Path, url: str) -> GrokBuildSetupReport:
+def install_grok_build(
+    source: Path, skill_root: Path, url: str, *, token: str | None = None
+) -> GrokBuildSetupReport:
     """Install the managed skill and native Grok MCP catalog entry."""
     _validate_url(url)
     source = source.resolve()
@@ -118,9 +124,7 @@ def install_grok_build(source: Path, skill_root: Path, url: str) -> GrokBuildSet
     existing = _skill_dir(skill_root)
     if not (source / "SKILL.md").is_file():
         raise ValueError("The Specgate skill must contain SKILL.md.")
-    previous = (
-        _manifest(existing, GROK_BUILD_MARKERS) if existing.exists() else None
-    )
+    previous = _manifest(existing, GROK_BUILD_MARKERS) if existing.exists() else None
     if existing.exists() and (
         previous is None
         or not _owned_and_unchanged(
@@ -131,7 +135,7 @@ def install_grok_build(source: Path, skill_root: Path, url: str) -> GrokBuildSet
         )
     ):
         raise ValueError("The destination skill exists and is not plugin-managed.")
-    mcp_status = _install_native_mcp(skill_root, url)
+    mcp_status = _install_native_mcp(skill_root, url, token=token)
     previous_mcp = (previous or {}).get("mcp")
     source_files = _files(source, GROK_BUILD_MARKERS)
     manifest = {
@@ -193,13 +197,16 @@ async def diagnose_grok_build(
     async def unused_decision(_: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("Diagnostics must not start an inference turn.")
 
-    async with GrokBuildControlledClient(
-        decide=unused_decision,
-        command=(*command, "agent", "stdio"),
-        timeout_seconds=timeout_seconds,
-        authenticate=False,
-    ) as client:
-        acp = dict(client.diagnostic)
+    try:
+        async with GrokBuildControlledClient(
+            decide=unused_decision,
+            command=(*command, "agent", "stdio"),
+            timeout_seconds=timeout_seconds,
+            authenticate=False,
+        ) as client:
+            acp: dict[str, Any] = dict(client.diagnostic)
+    except RuntimeError as error:
+        acp = {"usable": False, "error": str(error)}
     tools = await list_tools(url, token, timeout_seconds=timeout_seconds)
     if not _REQUIRED_TOOLS <= set(tools):
         raise ValueError("The MCP server does not expose all required decision tools.")

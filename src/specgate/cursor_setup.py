@@ -33,7 +33,7 @@ _REQUIRED_TOOLS = {"jev_decide", "jev_find", "jev_screen", "jev_verify"}
 
 class CursorSetupReport(TypedDict):
     skill: Literal["created", "unchanged", "removed", "preserved", "absent"]
-    mcp: Literal["created", "unchanged", "removed", "preserved", "absent"]
+    mcp: Literal["created", "unchanged", "updated", "removed", "preserved", "absent"]
 
 
 def _run(command: Sequence[str], *args: str) -> subprocess.CompletedProcess[str]:
@@ -71,7 +71,9 @@ def _write_marker(path: Path, manifest: dict[str, object]) -> None:
         (path / name).unlink(missing_ok=True)
 
 
-def install_cursor(source: Path, skill_root: Path, url: str) -> CursorSetupReport:
+def install_cursor(
+    source: Path, skill_root: Path, url: str, *, token: str | None = None
+) -> CursorSetupReport:
     """Install the managed skill and a native Cursor MCP catalog entry."""
     _validate_url(url)
     source = source.resolve()
@@ -80,9 +82,7 @@ def install_cursor(source: Path, skill_root: Path, url: str) -> CursorSetupRepor
     existing = _skill_dir(skill_root)
     if not (source / "SKILL.md").is_file():
         raise ValueError("The Specgate skill must contain SKILL.md.")
-    previous = (
-        _manifest(existing, CURSOR_MARKERS) if existing.exists() else None
-    )
+    previous = _manifest(existing, CURSOR_MARKERS) if existing.exists() else None
     if existing.exists() and (
         previous is None
         or not _owned_and_unchanged(
@@ -90,7 +90,9 @@ def install_cursor(source: Path, skill_root: Path, url: str) -> CursorSetupRepor
         )
     ):
         raise ValueError("The destination skill exists and is not plugin-managed.")
-    mcp_status = merge_json_mcp(_mcp_path(skill_root), url, include_type=False)
+    mcp_status = merge_json_mcp(
+        _mcp_path(skill_root), url, include_type=False, token=token
+    )
     previous_mcp = (previous or {}).get("mcp")
     source_files = _files(source, CURSOR_MARKERS)
     manifest = {
@@ -124,7 +126,9 @@ def install_cursor(source: Path, skill_root: Path, url: str) -> CursorSetupRepor
             shutil.rmtree(existing)
     except Exception:
         if mcp_status == "created":
-            remove_json_mcp(_mcp_path(skill_root), url, created=True, include_type=False)
+            remove_json_mcp(
+                _mcp_path(skill_root), url, created=True, include_type=False
+            )
         raise
     return {"skill": "created", "mcp": mcp_status}
 
@@ -144,11 +148,15 @@ async def diagnose_cursor(
         target, manifest, owners=CURSOR_OWNERS, markers=CURSOR_MARKERS
     ):
         raise ValueError("The managed Specgate skill is missing or modified.")
-    command = tuple(cursor_command) if cursor_command is not None else (
-        str(Path.home() / ".local/bin/cursor-agent"),
+    command = (
+        tuple(cursor_command)
+        if cursor_command is not None
+        else (str(Path.home() / ".local/bin/cursor-agent"),)
     )
     if len(command) == 1 and Path(command[0]).name != "cursor-agent":
-        raise ValueError("Use the explicit cursor-agent executable, not agent from PATH.")
+        raise ValueError(
+            "Use the explicit cursor-agent executable, not agent from PATH."
+        )
     version = _run(command, "--version")
     if version.returncode or not version.stdout.strip():
         raise ValueError("The explicit cursor-agent runtime is unavailable.")
@@ -156,13 +164,16 @@ async def diagnose_cursor(
     async def unused_decision(_: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("Diagnostics must not start an inference turn.")
 
-    async with CursorControlledClient(
-        decide=unused_decision,
-        command=(*command, "acp"),
-        timeout_seconds=timeout_seconds,
-        authenticate=False,
-    ) as client:
-        acp = dict(client.diagnostic)
+    try:
+        async with CursorControlledClient(
+            decide=unused_decision,
+            command=(*command, "acp"),
+            timeout_seconds=timeout_seconds,
+            authenticate=False,
+        ) as client:
+            acp: dict[str, Any] = dict(client.diagnostic)
+    except RuntimeError as error:
+        acp = {"usable": False, "error": str(error)}
     tools = await list_tools(url, token, timeout_seconds=timeout_seconds)
     if not _REQUIRED_TOOLS <= set(tools):
         raise ValueError("The MCP server does not expose all required decision tools.")
