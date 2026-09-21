@@ -50,7 +50,11 @@ def public_harness_setup_hints() -> dict[str, str]:
 
 def _ask(prompt: str, stdin: TextIO, stderr: TextIO) -> str:
     print(prompt, end="", file=stderr, flush=True)
-    return stdin.readline()
+    try:
+        return stdin.readline()
+    except KeyboardInterrupt:
+        print("\nCancelado.", file=stderr)
+        raise SystemExit(130) from None
 
 
 def prompt_harness_selection(
@@ -70,10 +74,12 @@ def prompt_harness_selection(
     names = tuple(available)
     while True:
         print(
-            "Harnesses detectados. Números alternam a seleção; Enter confirma.",
+            "Harnesses detectados. Números e a (todos) alternam a seleção; Enter confirma.",
             file=stderr,
         )
         print(file=stderr)
+        all_mark = "x" if selected == set(names) else " "
+        print(f"  [{all_mark}] a  Todos", file=stderr)
         for index, name in enumerate(names, start=1):
             mark = "x" if name in selected else " "
             print(
@@ -81,10 +87,17 @@ def prompt_harness_selection(
                 file=stderr,
             )
         print(file=stderr)
-        line = _ask("Toggle (números) ou Enter para continuar: ", stdin, stderr)
+        line = _ask("Toggle (números ou a) ou Enter para continuar: ", stdin, stderr)
         if line == "" or not line.strip():
             break
         for token in line.replace(",", " ").split():
+            key = token.lower()
+            if key == "a":
+                if selected == set(names):
+                    selected.clear()
+                else:
+                    selected.update(names)
+                continue
             if not token.isdigit() or not 1 <= int(token) <= len(names):
                 print(f"Valor inválido: {token}", file=stderr)
                 continue
@@ -284,6 +297,9 @@ def main() -> None:
         else:
             result = uninstall_public_harnesses()
         print(json.dumps(result, ensure_ascii=False, indent=2))
+    except KeyboardInterrupt:
+        print("\nCancelado.", file=sys.stderr)
+        raise SystemExit(130) from None
     except (ValueError, OSError, ExceptionGroup) as error:
         parser.error(str(error))
 
