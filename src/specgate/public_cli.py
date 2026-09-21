@@ -74,12 +74,15 @@ def prompt_harness_selection(
     names = tuple(available)
     while True:
         print(
-            "Harnesses detectados. Números e a (todos) alternam a seleção; Enter confirma.",
+            "Harnesses detectados. a instala em todos; números alternam a seleção; Enter confirma.",
             file=stderr,
         )
         print(file=stderr)
         all_mark = "x" if selected == set(names) else " "
-        print(f"  [{all_mark}] a  Todos", file=stderr)
+        print(
+            f"  [{all_mark}] a  Todos — instalar em todos os harnesses detectados",
+            file=stderr,
+        )
         for index, name in enumerate(names, start=1):
             mark = "x" if name in selected else " "
             print(
@@ -87,7 +90,11 @@ def prompt_harness_selection(
                 file=stderr,
             )
         print(file=stderr)
-        line = _ask("Toggle (números ou a) ou Enter para continuar: ", stdin, stderr)
+        line = _ask(
+            "Toggle (números ou a=todos) ou Enter para continuar: ",
+            stdin,
+            stderr,
+        )
         if line == "" or not line.strip():
             break
         for token in line.replace(",", " ").split():

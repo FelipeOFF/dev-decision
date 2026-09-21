@@ -71,15 +71,16 @@ function prepare(target) {
 
 const cliArgs = process.argv.slice(2).length ? process.argv.slice(2) : ["install"];
 const update = cliArgs[0] === "update";
+const reinstallBundled = Boolean(bundledClient) && cliArgs[0] === "install";
 const previousState = existsSync(statePath) ? readFileSync(statePath, "utf8") : null;
 const installedVersion = previousState ? JSON.parse(previousState).version : null;
 
-if (existsSync(runtime) && installedVersion !== version && !update) {
+if (existsSync(runtime) && installedVersion !== version && !update && !reinstallBundled) {
   console.error(`Specgate ${installedVersion || "unknown"} is installed; run update explicitly to install ${version}.`);
   process.exit(2);
 }
 
-if (!existsSync(runtime) || update) {
+if (!existsSync(runtime) || update || reinstallBundled) {
   mkdirSync(root, { recursive: true });
   const backup = join(root, "venv.backup");
   if (existsSync(backup)) {
