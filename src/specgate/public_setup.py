@@ -174,9 +174,10 @@ def detect_public_harnesses(*, home: Path | None = None) -> tuple[HarnessName, .
         detected.append("cursor")
     if shutil.which("grok"):
         detected.append("grok-build")
-    if Path("/Applications/Grok Bot.app").is_dir() or (
-        home / "Applications/Grok Bot.app"
-    ).is_dir():
+    if (
+        Path("/Applications/Grok Bot.app").is_dir()
+        or (home / "Applications/Grok Bot.app").is_dir()
+    ):
         detected.append("grok-bot")
     return tuple(detected)
 
@@ -271,9 +272,8 @@ def _uninstall_workflow_skills(skill_root: Path) -> dict[str, SkillInstallStatus
         manifest = _workflow_manifest(target) if target.exists() else None
         if manifest is None:
             reports[name] = "preserved" if target.exists() else "absent"
-        elif (
-            manifest.get("owner") in OWNERS
-            and manifest.get("files") == _tree_digest(target)
+        elif manifest.get("owner") in OWNERS and manifest.get("files") == _tree_digest(
+            target
         ):
             shutil.rmtree(target)
             reports[name] = "removed"
@@ -308,9 +308,7 @@ def _load_profile(path: Path) -> dict[str, Any] | None:
 
 def _owned_profile(profile: dict[str, Any] | None) -> bool:
     return bool(
-        profile
-        and profile.get("owner") in OWNERS
-        and profile.get("profile") == PROFILE
+        profile and profile.get("owner") in OWNERS and profile.get("profile") == PROFILE
     )
 
 
@@ -488,9 +486,7 @@ def _skill_targets(root: Path) -> list[Path]:
     ]
 
 
-def _managed_targets(
-    home: Path, harnesses: Sequence[HarnessName]
-) -> list[Path]:
+def _managed_targets(home: Path, harnesses: Sequence[HarnessName]) -> list[Path]:
     profile_path, credential_path, _ = _profile_paths(home, write=True)
     targets = [profile_path, credential_path]
     for harness in harnesses:
@@ -604,26 +600,27 @@ def _install_selected_harness(
                 home / ".claude",
                 url,
                 python_command=(sys.executable,),
+                token=api_key,
             ),
-            "workflows": _install_workflow_skills(
-                source_root, home / ".claude/skills"
-            ),
+            "workflows": _install_workflow_skills(source_root, home / ".claude/skills"),
         }
     if harness == "cursor":
         return {
-            "adapter": install_cursor(source, home / ".cursor/skills", url),
-            "workflows": _install_workflow_skills(
-                source_root, home / ".cursor/skills"
+            "adapter": install_cursor(
+                source, home / ".cursor/skills", url, token=api_key
             ),
+            "workflows": _install_workflow_skills(source_root, home / ".cursor/skills"),
         }
     if harness == "grok-build":
         return {
-            "adapter": install_grok_build(source, home / ".grok/skills", url),
+            "adapter": install_grok_build(
+                source, home / ".grok/skills", url, token=api_key
+            ),
             "workflows": _install_workflow_skills(source_root, home / ".grok/skills"),
         }
     bundle_root = grok_bot_root(home, write=True)
     return {
-        "adapter": install_grok_bot(source, bundle_root, url),
+        "adapter": install_grok_bot(source, bundle_root, url, token=api_key),
         "workflows": _install_workflow_skills(source_root, bundle_root),
     }
 
@@ -647,6 +644,8 @@ def install_public_harnesses(
     if not api_key or any(not 33 <= ord(character) <= 126 for character in api_key):
         raise ValueError("The MCP API key is invalid.")
     home = home or Path.home()
+    os.environ[TOKEN_ENV] = api_key
+    os.environ.setdefault(LEGACY_TOKEN_ENV, api_key)
     source = source_root / SKILL
     if not (source / "SKILL.md").is_file():
         raise ValueError("The Specgate skill must contain SKILL.md.")
@@ -711,9 +710,7 @@ def install_public_harnesses(
         "credential": str(credential_path),
         "harnesses": reports,
         "wrappers": {
-            name: wrappers[name]["path"]
-            for name in harnesses
-            if name in wrappers
+            name: wrappers[name]["path"] for name in harnesses if name in wrappers
         },
     }
 
@@ -833,6 +830,16 @@ async def doctor_public_harnesses(
         raise ValueError("A credencial gerenciada está ausente, exposta ou modificada.")
     url = str(profile["url"])
     token = credential_path.read_text().strip()
+    os.environ[TOKEN_ENV] = token
+    os.environ.setdefault(LEGACY_TOKEN_ENV, token)
+
+    async def report(coro: Any) -> dict[str, Any]:
+        try:
+            result = await coro
+        except (ValueError, OSError, ExceptionGroup, RuntimeError) as error:
+            return {"usable": False, "error": str(error)}
+        return result if isinstance(result, dict) else {"usable": False}
+
     project_id = await _sync_project_id(
         url,
         token,
@@ -845,40 +852,50 @@ async def doctor_public_harnesses(
     enabled = enabled if isinstance(enabled, dict) else {}
     reports: dict[str, Any] = {}
     if enabled.get("codex") is True:
-        reports["codex"] = await doctor_public_codex(
-            project,
-            home=home,
-            codex_command=codex_command,
-            timeout_seconds=timeout_seconds,
+        reports["codex"] = await report(
+            doctor_public_codex(
+                project,
+                home=home,
+                codex_command=codex_command,
+                timeout_seconds=timeout_seconds,
+            )
         )
     if enabled.get("claude-code") is True:
-        reports["claude-code"] = await diagnose_claude(
-            project,
-            home / ".claude",
-            url,
-            token,
-            timeout_seconds=timeout_seconds,
+        reports["claude-code"] = await report(
+            diagnose_claude(
+                project,
+                home / ".claude",
+                url,
+                token,
+                timeout_seconds=timeout_seconds,
+            )
         )
     if enabled.get("cursor") is True:
-        reports["cursor"] = await diagnose_cursor(
-            home / ".cursor/skills",
-            url,
-            token,
-            timeout_seconds=timeout_seconds,
+        reports["cursor"] = await report(
+            diagnose_cursor(
+                home / ".cursor/skills",
+                url,
+                token,
+                timeout_seconds=timeout_seconds,
+            )
         )
     if enabled.get("grok-build") is True:
-        reports["grok-build"] = await diagnose_grok_build(
-            home / ".grok/skills",
-            url,
-            token,
-            timeout_seconds=timeout_seconds,
+        reports["grok-build"] = await report(
+            diagnose_grok_build(
+                home / ".grok/skills",
+                url,
+                token,
+                timeout_seconds=timeout_seconds,
+            )
         )
     if enabled.get("grok-bot") is True:
-        reports["grok-bot"] = await diagnose_grok_bot(
-            grok_bot_root(home),
-            url,
-            token,
-            timeout_seconds=timeout_seconds,
+        reports["grok-bot"] = await report(
+            diagnose_grok_bot(
+                grok_bot_root(home),
+                url,
+                token,
+                timeout_seconds=timeout_seconds,
+            )
         )
     return {
         "profile": PROFILE,
@@ -907,9 +924,7 @@ async def _sync_project_id(
     existing = profile.get("project_id")
     existing_id = existing if isinstance(existing, str) else None
     try:
-        setup = await ProjectClient(
-            url, token, timeout_seconds=timeout_seconds
-        ).setup(
+        setup = await ProjectClient(url, token, timeout_seconds=timeout_seconds).setup(
             path_metadata=str(project.resolve()),
             project_id=existing_id,
         )
@@ -1018,7 +1033,10 @@ def uninstall_public_harnesses(
     stored_wrappers = profile.get("wrappers")
     entries = stored_wrappers if isinstance(stored_wrappers, dict) else {}
     candidates: list[tuple[Path, str | None]] = [
-        (Path(str(entry.get("path", ""))), entry.get("sha256") if isinstance(entry.get("sha256"), str) else None)
+        (
+            Path(str(entry.get("path", ""))),
+            entry.get("sha256") if isinstance(entry.get("sha256"), str) else None,
+        )
         for entry in entries.values()
         if isinstance(entry, dict)
     ]

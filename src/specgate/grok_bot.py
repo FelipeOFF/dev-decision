@@ -59,7 +59,10 @@ class GrokBotQuestion:
             not self.id.strip()
             or not self.prompt.strip()
             or not 2 <= len(self.options) <= 48
-            or any(not option_id.strip() or not text.strip() for option_id, text in self.options)
+            or any(
+                not option_id.strip() or not text.strip()
+                for option_id, text in self.options
+            )
             or len(set(option_ids)) != len(option_ids)
         ):
             raise ValueError("Grok Bot questions require unique, non-empty options.")
@@ -142,7 +145,9 @@ class GrokBotCooperativeFlow:
                     warning=warning,
                 )
         decision = result.get("decision")
-        selected = decision.get("selected_option") if isinstance(decision, dict) else None
+        selected = (
+            decision.get("selected_option") if isinstance(decision, dict) else None
+        )
         automatable = (
             question.question_type == "single_choice"
             and not question.requires_authorization
@@ -197,7 +202,9 @@ def _cloud_reachable(url: str) -> bool:
     return endpoint.scheme == "https" and not loopback
 
 
-def install_grok_bot(source: Path, bundle_root: Path, url: str) -> GrokBotSetupReport:
+def install_grok_bot(
+    source: Path, bundle_root: Path, url: str, *, token: str | None = None
+) -> GrokBotSetupReport:
     """Prepare the owned skill bundle for the documented manual Bot entries."""
     _validate_url(url)
     source = source.resolve()
@@ -213,7 +220,7 @@ def install_grok_bot(source: Path, bundle_root: Path, url: str) -> GrokBotSetupR
         raise ValueError("The destination bundle exists and is not plugin-managed.")
 
     mcp_path = bundle_root / "mcp.json"
-    mcp_status = merge_json_mcp(mcp_path, url, include_type=False)
+    mcp_status = merge_json_mcp(mcp_path, url, include_type=False, token=token)
     previous_mcp = (previous or {}).get("mcp")
     source_files = _files(source)
     manifest = {

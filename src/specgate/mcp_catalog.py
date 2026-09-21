@@ -11,20 +11,50 @@ from typing import Any, Literal
 
 from specgate.product import LEGACY_MCP_SERVER, MCP_SERVER, TOKEN_ENV
 
-McpStatus = Literal["created", "unchanged", "removed", "preserved", "absent"]
+McpStatus = Literal["created", "unchanged", "updated", "removed", "preserved", "absent"]
 _GROK_TABLE = f"mcp_servers.{MCP_SERVER}"
 _GROK_LEGACY_TABLE = f"mcp_servers.{LEGACY_MCP_SERVER}"
 
 
-def http_headers(token_env: str = TOKEN_ENV) -> dict[str, str]:
+def _toml_string(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def http_headers(
+    token_env: str = TOKEN_ENV, *, token: str | None = None
+) -> dict[str, str]:
+    if token:
+        return {"Authorization": f"Bearer {token}"}
     return {"Authorization": f"Bearer ${{{token_env}}}"}
 
 
-def json_http_server(url: str, *, include_type: bool = True) -> dict[str, Any]:
-    entry: dict[str, Any] = {"url": url, "headers": http_headers()}
+def json_http_server(
+    url: str, *, include_type: bool = True, token: str | None = None
+) -> dict[str, Any]:
+    entry: dict[str, Any] = {"url": url, "headers": http_headers(token=token)}
     if include_type:
         return {"type": "http", **entry}
     return entry
+
+
+def _authorization(existing: object) -> str:
+    if not isinstance(existing, dict):
+        return ""
+    headers = existing.get("headers")
+    if not isinstance(headers, dict):
+        return ""
+    for key, value in headers.items():
+        if key.lower() == "authorization" and isinstance(value, str):
+            return value
+    return ""
+
+
+def specgate_http_owned(existing: object, url: str) -> bool:
+    if not isinstance(existing, dict):
+        return False
+    if existing.get("url") != url:
+        return False
+    return _authorization(existing).startswith("Bearer ")
 
 
 def _write_json(path: Path, value: dict[str, Any]) -> None:
@@ -55,9 +85,9 @@ def _read_json_object(path: Path) -> dict[str, Any]:
 def entry_matches(existing: object, entry: dict[str, Any]) -> bool:
     if not isinstance(existing, dict):
         return False
-    return existing.get("url") == entry.get("url") and existing.get("headers") == entry.get(
+    return existing.get("url") == entry.get("url") and existing.get(
         "headers"
-    )
+    ) == entry.get("headers")
 
 
 def merge_json_mcp(
@@ -66,9 +96,10 @@ def merge_json_mcp(
     *,
     include_type: bool = True,
     name: str = MCP_SERVER,
+    token: str | None = None,
 ) -> McpStatus:
     """Insert or confirm a Specgate HTTP server in an mcpServers JSON catalog."""
-    entry = json_http_server(url, include_type=include_type)
+    entry = json_http_server(url, include_type=include_type, token=token)
     data = _read_json_object(path)
     servers = data.get("mcpServers")
     if servers is None:
@@ -77,13 +108,18 @@ def merge_json_mcp(
     elif not isinstance(servers, dict):
         raise ValueError("MCP catalog mcpServers is invalid.")
     existing = servers.get(name)
-    if existing is not None and not entry_matches(existing, entry):
+    if (
+        existing is not None
+        and not specgate_http_owned(existing, url)
+        and (existing.get("url") != url or not entry_matches(existing, entry))
+    ):
         raise ValueError("The specgate MCP entry already has another configuration.")
     if entry_matches(existing, entry):
         return "unchanged"
+    had_owned = existing is not None and specgate_http_owned(existing, url)
     servers[name] = entry
     _write_json(path, data)
-    return "created"
+    return "updated" if had_owned else "created"
 
 
 def remove_json_mcp(
@@ -93,6 +129,7 @@ def remove_json_mcp(
     created: bool,
     include_type: bool = True,
     name: str = MCP_SERVER,
+    token: str | None = None,
 ) -> McpStatus:
     """Remove only a Specgate entry this installer previously created."""
     names = (name, LEGACY_MCP_SERVER) if name == MCP_SERVER else (name,)
@@ -108,8 +145,8 @@ def remove_json_mcp(
     if not created:
         return "preserved"
     existing = servers[target]
-    entry = json_http_server(url, include_type=include_type)
-    if not entry_matches(existing, entry):
+    entry = json_http_server(url, include_type=include_type, token=token)
+    if not entry_matches(existing, entry) and not specgate_http_owned(existing, url):
         return "preserved"
     servers.pop(target)
     if not servers:
@@ -118,11 +155,12 @@ def remove_json_mcp(
     return "removed"
 
 
-def grok_server_block(url: str) -> str:
+def grok_server_block(url: str, *, token: str | None = None) -> str:
+    authorization = f"Bearer {token}" if token else f"Bearer ${{{TOKEN_ENV}}}"
     return (
         f"[{_GROK_TABLE}]\n"
-        f'url = "{url}"\n'
-        f'headers = {{ Authorization = "Bearer ${{{TOKEN_ENV}}}" }}\n'
+        f"url = {_toml_string(url)}\n"
+        f"headers = {{ Authorization = {_toml_string(authorization)} }}\n"
     )
 
 
@@ -148,11 +186,11 @@ def _table_url(block: str) -> str | None:
     return match.group(1) if match else None
 
 
-def merge_grok_config(path: Path, url: str) -> McpStatus:
+def merge_grok_config(path: Path, url: str, *, token: str | None = None) -> McpStatus:
     """Merge [mcp_servers.specgate] into ~/.grok/config.toml."""
     text = path.read_text() if path.is_file() else ""
     span = _table_span(text, _GROK_TABLE)
-    block = grok_server_block(url)
+    block = grok_server_block(url, token=token)
     if span is None:
         prefix = text if not text or text.endswith("\n") else text + "\n"
         if prefix and not prefix.endswith("\n\n"):
@@ -162,12 +200,12 @@ def merge_grok_config(path: Path, url: str) -> McpStatus:
         return "created"
     existing = text[span[0] : span[1]]
     current_url = _table_url(existing)
-    if current_url == url and TOKEN_ENV in existing:
-        return "unchanged"
     if current_url not in {None, url}:
         raise ValueError("The specgate MCP entry already has another configuration.")
+    if existing.strip() == block.strip():
+        return "unchanged"
     path.write_text(text[: span[0]] + block + text[span[1] :])
-    return "created"
+    return "updated" if current_url == url else "created"
 
 
 def remove_grok_config(path: Path, url: str, *, created: bool) -> McpStatus:

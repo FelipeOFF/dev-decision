@@ -24,6 +24,7 @@ from specgate.mcp_catalog import (
     entry_matches,
     json_http_server,
     remove_json_mcp,
+    specgate_http_owned,
 )
 from specgate.product import LEGACY_MCP_SERVER, MCP_SERVER, SKILL, TOKEN_ENV
 from specgate.transport import list_tools
@@ -36,7 +37,7 @@ _REQUIRED_TOOLS = {"jev_decide", "jev_find", "jev_screen", "jev_verify"}
 class ClaudeSetupReport(TypedDict):
     skill: Literal["created", "unchanged", "removed", "preserved", "absent"]
     hooks: Literal["created", "unchanged", "removed", "preserved", "absent"]
-    mcp: Literal["created", "unchanged", "removed", "preserved", "absent"]
+    mcp: Literal["created", "unchanged", "updated", "removed", "preserved", "absent"]
 
 
 def _run(command: Sequence[str], *args: str) -> subprocess.CompletedProcess[str]:
@@ -134,6 +135,7 @@ def install_claude(
     *,
     python_command: Sequence[str] = (sys.executable,),
     timeout_seconds: float = 30,
+    token: str | None = None,
 ) -> ClaudeSetupReport:
     """Install one managed skill and two native hooks without storing secrets."""
     _validate_url(url)
@@ -168,14 +170,16 @@ def install_claude(
     owned: dict[str, dict[str, Any]] = {}
     for event, entry in entries.items():
         values = hooks.setdefault(event, [])
-        was_owned = isinstance(previous_hooks, dict) and previous_hooks.get(event) == entry
+        was_owned = (
+            isinstance(previous_hooks, dict) and previous_hooks.get(event) == entry
+        )
         if entry not in values:
             values.append(entry)
             owned[event] = entry
         elif was_owned:
             owned[event] = entry
 
-    mcp_entry = json_http_server(url, include_type=True)
+    mcp_entry = json_http_server(url, include_type=True, token=token)
     servers = settings.get("mcpServers")
     if servers is None:
         servers = {}
@@ -183,7 +187,11 @@ def install_claude(
     elif not isinstance(servers, dict):
         raise ValueError("Claude Code settings.json contains invalid mcpServers.")
     existing_mcp = servers.get(_NAME, servers.get(LEGACY_MCP_SERVER))
-    if existing_mcp is not None and not entry_matches(existing_mcp, mcp_entry):
+    if (
+        existing_mcp is not None
+        and not specgate_http_owned(existing_mcp, url)
+        and not entry_matches(existing_mcp, mcp_entry)
+    ):
         raise ValueError("The specgate MCP entry already has another configuration.")
     mcp_status: Literal["created", "unchanged"] = (
         "unchanged"
