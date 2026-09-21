@@ -1,10 +1,10 @@
 {
-  "name": "@felipeoff/dev-decision",
+  "name": "@felipeoff/specgate",
   "version": "0.1.0",
   "description": "Harness plugin for evidence-backed decisions with Jev",
   "license": "MIT",
   "bin": {
-    "dev-decision": "launcher/bin/dev-decision.js"
+    "specgate": "launcher/bin/specgate.js"
   },
   "engines": {
     "node": ">=18"
@@ -12,7 +12,7 @@
   "files": [
     "launcher/bin",
     "launcher/LICENSE",
-    "src/dev_decision",
+    "src/specgate",
     "pyproject.toml",
     "LICENSE",
     "README.md"
