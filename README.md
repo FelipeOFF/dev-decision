@@ -54,7 +54,7 @@ That is what makes it reasonable to put a decision on every grill question, ever
 
 1. You need a Specgate MCP host (`https://…/mcp`) and an API key for it. The key is not a TypeSafe or OpenRouter key; those live on the server.
 2. Run `pipx install git+https://github.com/FelipeOFF/specgate.git`, then `specgate install --host https://YOUR_MCP/mcp`. Pick the harnesses it found (`a` for all), or pass `--yes`. Paste the API key when asked; it is written to `~/.config/specgate/credentials/default.key` with mode `0600`.
-3. Run `specgate doctor --project .` in the repo you will work in. Doctor checks runtime, SemVer handshake, auth and the tool catalog. It does not start a model turn.
+3. Run `specgate doctor --project .` in the repo you will work in. It prints one line per harness. Add `--json` for the full report. Doctor checks runtime, handshake, auth and the tool catalog. It does not start a model turn.
 4. Open the harness. Use `grill-with-jev` on a real scope question.
 
 A question Jev can close from `CONTEXT.md` and the authorized roots comes back as a typed result. A business choice, an authorization, or a gap after three evidence retries stays with you.
@@ -92,7 +92,7 @@ Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `D
 | Command | What it does |
 | --- | --- |
 | `specgate install` | Detect harnesses, store the MCP key, install skills, wrappers and native MCP entries |
-| `specgate doctor` | Runtime, handshake, auth and tool catalog, no model turn |
+| `specgate doctor` | One status line per harness. `--json` for the full report |
 | `specgate smoke` | Attached handshake + route + one mock tool. No paid inference |
 | `specgate update` | Explicit. Refresh managed skills and wrappers from this package |
 | `specgate uninstall` | Remove plugin-managed files only |
