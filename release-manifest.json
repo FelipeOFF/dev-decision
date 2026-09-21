@@ -4,9 +4,9 @@
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
     "README.md": "bc3a99141654c7bbada2f0ec790468abbbbb4383196220b3dafbe9b333357837",
     "launcher/LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "launcher/bin/specgate.js": "3f8cc1c0a6166daafbda0772b907d5c66256da9ada74d42ef976599ebca11d48",
+    "launcher/bin/specgate.js": "b7837c086e412d102e6c1b8f8a5429bb14fbfec4bc3aa294f9bb0019fc570210",
     "launcher/package.json": "fd78080ad84299e0bbceb48435275f8e13168095766c0d0519509a400c2e90ae",
-    "package.json": "6af3b27b498971cf5693397c2652817c3bcd7dcbb10939eb48c24a5c8c837b04",
+    "package.json": "7294f66bcda1a3a70a078a085370b03f9fde21b4cb18c714a1e6e2ebca768da8",
     "pyproject.toml": "6297d4010acdff27a14569aff68830774f2bfdb4be848c3b739735050ee9bb8d",
     "scripts/verify_release.py": "d2f7798745d26b800a0da0f44cccd35fb725da715847ce4de71e396c1316ae3b",
     "src/specgate/claude_hook.py": "e58104cc0a1f67cbf15b49fb49976eb21c3c7708a79bb3377b84201955d9ae88",
@@ -52,7 +52,7 @@
   "provenance": {
     "generator": "scripts/export_public_release.py",
     "source_repository": "FelipeOFF/specgate-server-mcp",
-    "source_revision": "a6d79bb31f9294424f3c9970b1d37d0d2b9e7e59"
+    "source_revision": "933459227e7e00e8d265e92f924e9b9b67841886"
   },
   "schema": 1,
   "version": "0.1.0"
