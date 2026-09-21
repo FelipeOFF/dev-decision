@@ -1,14 +1,10 @@
 {
   "files": {
-    ".github/workflows/release.yml": "fdf8601785f60244054e81b2f0d8ea5d472f9ad199d8f159dbb9243c847102ee",
+    ".github/workflows/release.yml": "a77d3551adb4d9bf284bdbc8b3525673d6706d57b642f8d1a9c604123a50470f",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "bc3a99141654c7bbada2f0ec790468abbbbb4383196220b3dafbe9b333357837",
-    "launcher/LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "launcher/bin/specgate.js": "b284a3fb29e70e022f2cb282cffffd477c5f08d8906bdd4d611246db02947a45",
-    "launcher/package.json": "fd78080ad84299e0bbceb48435275f8e13168095766c0d0519509a400c2e90ae",
-    "package.json": "7294f66bcda1a3a70a078a085370b03f9fde21b4cb18c714a1e6e2ebca768da8",
+    "README.md": "72ac7284b63f00e36f132370159321354a3ec03928d80156e4314f268b5cd012",
     "pyproject.toml": "6297d4010acdff27a14569aff68830774f2bfdb4be848c3b739735050ee9bb8d",
-    "scripts/verify_release.py": "d2f7798745d26b800a0da0f44cccd35fb725da715847ce4de71e396c1316ae3b",
+    "scripts/verify_release.py": "60424048edd2a630ba750d8b511578289fbbe2b03f4b57051ee611858c26f19c",
     "src/specgate/claude_hook.py": "e58104cc0a1f67cbf15b49fb49976eb21c3c7708a79bb3377b84201955d9ae88",
     "src/specgate/claude_setup.py": "a11703e42660721a071f7807c9861d58229755f0869b0b8368a4ad060e09b2a2",
     "src/specgate/client.py": "3be446b6750f155395cf2edb76dc9b052d31a44059e53e9a016fbc43cb73541c",
@@ -25,7 +21,7 @@
     "src/specgate/privacy.py": "4465638b65b658f0302f2a29487582bcfd6937cf6a15d6b951236c1729b802a6",
     "src/specgate/product.py": "7be5d1dc3dfb024d3b19294e196b5e4241c23d9eaa67a0f47adc65a98bcc7e89",
     "src/specgate/protocol.py": "d7cbdfdb8d53d49049a1eab34f0348593ca001f148e2cdd7f03b4572d6faa1df",
-    "src/specgate/public_cli.py": "864571acd7c08346a6e63d8ade75030b6a32bf0c0c1106cfdceef8edaca2a745",
+    "src/specgate/public_cli.py": "c86c2330764f2f6550aec2d470427d88fcaaacbbeb954b6edfb8c0191e1d6f52",
     "src/specgate/public_gate_revision.py": "393b45c341c5e53d50e5c48ecefca38c05445c4994899cbb35e4196778caaa71",
     "src/specgate/public_setup.py": "dcf4f6ee2c76eb0b18bb405b65114e0c853be19aa6e01d6e3328b388a90e75d6",
     "src/specgate/recipe_inputs.py": "2585e021890a75f9583036021823525ec777374a02d9f1cb0535e0cd9ec69010",
@@ -52,7 +48,7 @@
   "provenance": {
     "generator": "scripts/export_public_release.py",
     "source_repository": "FelipeOFF/specgate-server-mcp",
-    "source_revision": "a004f901e5cad8c3d4b07f36e877a9d1e69d5663"
+    "source_revision": "ae824db98b07bb6510356facfe5402ff9951cee9"
   },
   "schema": 1,
   "version": "0.1.0"

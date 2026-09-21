@@ -17,16 +17,17 @@
 
 ---
 
-This repository is the MIT client: npm launcher, Python package, skills and harness adapters. It does not contain the MCP server, prompts, calibration or API-key admin.
+This repository is the MIT client: Python package, skills and harness adapters. It does not contain the MCP server, prompts, calibration or API-key admin.
 
 ```
-npx @felipeoff/specgate install
-npx @felipeoff/specgate doctor --project .
+pipx install git+https://github.com/FelipeOFF/specgate.git
+specgate install
+specgate doctor --project .
 ```
 
 Then start `codex`, `claude`, Cursor, `grok` or Grok Bot as usual. That is the whole setup.
 
-macOS or Linux, Python 3.12+. Node 18 is only the bootstrap; the product runtime is Python. The installer lists the harnesses on this machine with their limits, lets you toggle each one, asks for the MCP host and API key, and stores the key in an owner-only file. Never pass the key on the command line. `--harness` and `--host` skip those prompts; `--yes` takes every detected harness.
+macOS or Linux, Python 3.12+, [pipx](https://pipx.pypa.io/). The installer lists the harnesses on this machine with their limits, lets you toggle each one (`a` installs on all of them), asks for the MCP host and API key, and stores the key in an owner-only file. Never pass the key on the command line. `--harness` and `--host` skip those prompts; `--yes` takes every detected harness.
 
 ## What it does
 
@@ -52,8 +53,8 @@ That is what makes it reasonable to put a decision on every grill question, ever
 ## Three minutes to the first routed skill
 
 1. You need a Specgate MCP host (`https://…/mcp`) and an API key for it. The key is not a TypeSafe or OpenRouter key; those live on the server.
-2. Run `npx @felipeoff/specgate install --host https://YOUR_MCP/mcp`. Pick the harnesses it found, or pass `--yes`. Paste the API key when asked; it is written to `~/.config/specgate/credentials/default.key` with mode `0600`.
-3. Run `npx @felipeoff/specgate doctor --project .` in the repo you will work in. Doctor checks runtime, SemVer handshake, auth and the tool catalog. It does not start a model turn.
+2. Run `pipx install git+https://github.com/FelipeOFF/specgate.git`, then `specgate install --host https://YOUR_MCP/mcp`. Pick the harnesses it found (`a` for all), or pass `--yes`. Paste the API key when asked; it is written to `~/.config/specgate/credentials/default.key` with mode `0600`.
+3. Run `specgate doctor --project .` in the repo you will work in. Doctor checks runtime, SemVer handshake, auth and the tool catalog. It does not start a model turn.
 4. Open the harness. Use `grill-with-jev` on a real scope question.
 
 A question Jev can close from `CONTEXT.md` and the authorized roots comes back as a typed result. A business choice, an authorization, or a gap after three evidence retries stays with you.
@@ -62,11 +63,11 @@ A question Jev can close from `CONTEXT.md` and the authorized roots comes back a
 
 | Agent | Install | Where it lands |
 | --- | --- | --- |
-| Codex | `npx @felipeoff/specgate install --harness codex` | `~/.agents/skills`, `~/.local/bin/specgate-codex`, Codex MCP `specgate` |
-| Claude Code | `npx @felipeoff/specgate install --harness claude-code` | `~/.claude/settings.json` (`mcpServers.specgate` + hooks), `~/.claude/skills` |
-| Cursor | `npx @felipeoff/specgate install --harness cursor` | `~/.cursor/mcp.json`, `~/.cursor/skills`, `~/.local/bin/specgate-cursor` |
-| Grok Build | `npx @felipeoff/specgate install --harness grok-build` | `~/.grok/config.toml`, `~/.grok/skills`, `~/.local/bin/specgate-grok-build` |
-| Grok Bot | `npx @felipeoff/specgate install --harness grok-bot` | `~/.specgate/grok-bot` |
+| Codex | `specgate install --harness codex` | `~/.agents/skills`, `~/.local/bin/specgate-codex`, Codex MCP `specgate` |
+| Claude Code | `specgate install --harness claude-code` | `~/.claude/settings.json` (`mcpServers.specgate` + hooks), `~/.claude/skills` |
+| Cursor | `specgate install --harness cursor` | `~/.cursor/mcp.json`, `~/.cursor/skills`, `~/.local/bin/specgate-cursor` |
+| Grok Build | `specgate install --harness grok-build` | `~/.grok/config.toml`, `~/.grok/skills`, `~/.local/bin/specgate-grok-build` |
+| Grok Bot | `specgate install --harness grok-bot` | `~/.specgate/grok-bot` |
 
 `install` with no `--harness` detects what is on this machine and asks once per agent. Repeat installs keep foreign skills and config they do not own.
 
@@ -93,7 +94,7 @@ Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `D
 | `specgate install` | Detect harnesses, store the MCP key, install skills, wrappers and native MCP entries |
 | `specgate doctor` | Runtime, handshake, auth and tool catalog, no model turn |
 | `specgate smoke` | Attached handshake + route + one mock tool. No paid inference |
-| `specgate update` | Explicit. New venv, previous kept as backup, restore on failure |
+| `specgate update` | Explicit. Refresh managed skills and wrappers from this package |
 | `specgate uninstall` | Remove plugin-managed files only |
 
 There is no auto-update. A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed.
@@ -111,7 +112,6 @@ python3 -m venv .venv
 
 | Path | What |
 | --- | --- |
-| `launcher/` | `npx @felipeoff/specgate` |
 | `src/specgate/` | Public Python client and harness adapters |
 | `src/specgate/skills/` | `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev` |
 | `scripts/verify_release.py` | Version lock and SHA-256 of the exported tree |
@@ -119,7 +119,7 @@ python3 -m venv .venv
 ## Privacy and safety
 
 - The API key is never a flag, never in harness config, never logged. Lookups: the credential file, or `SPECGATE_MCP_API_KEY` (fallback `DEV_DECISION_MCP_API_KEY`) for local automation (still written only to that file).
-- Wrappers live in `~/.local/bin/specgate-*`. Profile: `~/.config/specgate/profiles/default.json`. Python runtime: `~/.local/share/specgate`.
+- Wrappers live in `~/.local/bin/specgate-*`. Profile: `~/.config/specgate/profiles/default.json`. The Python runtime is the pipx environment for `specgate-client`.
 - Context sent to the MCP is the evidence you authorized for that call. Model provider keys never leave the server process.
 - The client talks to the host over HTTPS (HTTP only on loopback) and uses the system CAs.
 - No MCP, auth failure, or a protocol major mismatch: the harness continues and the decision stays in review.
@@ -128,10 +128,11 @@ python3 -m venv .venv
 ## Uninstall
 
 ```
-npx @felipeoff/specgate uninstall
+specgate uninstall
+pipx uninstall specgate-client
 ```
 
-Removes the managed profile, credential, wrappers, Specgate MCP catalog entries and skills this plugin wrote. Harness config it did not create stays. Delete `~/.local/share/specgate` yourself if you also want the venv gone.
+Removes the managed profile, credential, wrappers, Specgate MCP catalog entries and skills this plugin wrote. Harness config it did not create stays. `pipx uninstall` removes the CLI itself.
 
 ## License
 

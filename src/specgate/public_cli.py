@@ -1,4 +1,4 @@
-"""Interactive entry point used by the npm bootstrap."""
+"""Interactive entry point for the public pipx client."""
 
 from __future__ import annotations
 
