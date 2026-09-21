@@ -3,7 +3,7 @@
     ".github/workflows/ci.yml": "32b28f2e92a7d415a1687d4cadf540c84adfff4b8910be6388920eae662e7c3a",
     ".github/workflows/release.yml": "a77d3551adb4d9bf284bdbc8b3525673d6706d57b642f8d1a9c604123a50470f",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "19ce91de152019e1b0235aeaed109da9f6f4d887a642fd39ae9db1bc9fd1ff49",
+    "README.md": "4e02a1dac7dc0eeab98cd074179f149149419dab751e03ee127bba191441a49f",
     "pyproject.toml": "6297d4010acdff27a14569aff68830774f2bfdb4be848c3b739735050ee9bb8d",
     "scripts/verify_release.py": "60424048edd2a630ba750d8b511578289fbbe2b03f4b57051ee611858c26f19c",
     "src/specgate/claude_hook.py": "e58104cc0a1f67cbf15b49fb49976eb21c3c7708a79bb3377b84201955d9ae88",
@@ -25,7 +25,7 @@
     "src/specgate/protocol.py": "d7cbdfdb8d53d49049a1eab34f0348593ca001f148e2cdd7f03b4572d6faa1df",
     "src/specgate/public_cli.py": "edeae4d87854f0db22e98b1f683aedb346ad267c000136b5609fa29ed49909a7",
     "src/specgate/public_gate_revision.py": "393b45c341c5e53d50e5c48ecefca38c05445c4994899cbb35e4196778caaa71",
-    "src/specgate/public_setup.py": "785eeb5d46616f8443b7fe2ca8e07311ce46625675d1d09b086aa31cf288cc53",
+    "src/specgate/public_setup.py": "f18f5fba7f8a7d8641f545c7adb18bcefa739f1cc35e4a251b0b6e033fa58b84",
     "src/specgate/recipe_inputs.py": "2585e021890a75f9583036021823525ec777374a02d9f1cb0535e0cd9ec69010",
     "src/specgate/routing.py": "c6617493899e35b3efd9581b1b84beadc2123653c73979b0a52ce135dd56c893",
     "src/specgate/shared/domain/decisions.py": "0acf9947d84ccb2b0f5f3951b105be4cb299952ad896ce25272b293fb8acf015",
@@ -40,6 +40,7 @@
     "src/specgate/skills/specgate/references/jev-recipes.md": "72ec7e163ae5c3188161629941fc68dfb1fe580c7d1214b48deceea53fc69e05",
     "src/specgate/skills/to-spec-jev/SKILL.md": "352f5f8e62d7e5a9b9d380978f33692981b70e6dad47f680a72a6e7833f69c8f",
     "src/specgate/skills/to-tickets-jev/SKILL.md": "28e1c17716498cc03460770dddf7caec7249527d7b88d642aa7a1658f4cd7d6e",
+    "src/specgate/skills/triage-jev/SKILL.md": "dc269b37c9d5ee61aac2a0a5c655ddcbc73c471ead0fa9ebf727a0dfcf34cfdd",
     "src/specgate/skills/verify-spec-jev/SKILL.md": "3829fd161669b5ed1a65c65fc847b0fa23444e5e8e6486324948d6206d42c4bb",
     "src/specgate/slices/decide.py": "09312accaec04c1f94504487dc34035028d8bc09872ce519642121767226926e",
     "src/specgate/slices/find.py": "4fbd09c8ea3db2647224585db29707fcac5260f414e5da3fe0477e9934d4edbc",
@@ -50,7 +51,7 @@
   "provenance": {
     "generator": "scripts/export_public_release.py",
     "source_repository": "FelipeOFF/specgate-server-mcp",
-    "source_revision": "330a9bc2edcd544c779ee5611447cb1a72942216"
+    "source_revision": "beabd04746c6c7ef18f5e06712d1eaaac27d6dac"
   },
   "schema": 1,
   "version": "0.1.0"
