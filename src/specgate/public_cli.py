@@ -41,11 +41,168 @@ _HARNESS_SETUP_HINTS = {
         "sem interceptação obrigatória"
     ),
 }
+_HARNESS_LABELS = {
+    "codex": "Codex",
+    "claude-code": "Claude Code",
+    "cursor": "Cursor",
+    "grok-build": "Grok Build",
+    "grok-bot": "Grok Bot",
+}
+_ACTION_LABELS = {
+    "created": "instalado",
+    "unchanged": "já estava",
+    "updated": "atualizado",
+    "removed": "removido",
+    "preserved": "preservado",
+    "absent": "ausente",
+}
 
 
 def public_harness_setup_hints() -> dict[str, str]:
     """Return the installer line shown for each supported harness."""
     return dict(_HARNESS_SETUP_HINTS)
+
+
+def _harness_label(name: str) -> str:
+    return _HARNESS_LABELS.get(name, name)
+
+
+def _status_row(name: str, status: str) -> str:
+    return f"  {_harness_label(name):<13} {status}"
+
+
+def _doctor_row(name: str, report: object) -> tuple[bool, str]:
+    if not isinstance(report, dict):
+        return False, _status_row(name, "falhou")
+    if report.get("usable") is True:
+        return True, _status_row(name, "ok")
+    if report.get("usable") is False:
+        line = _status_row(name, "falhou")
+        error = str(report.get("error") or "").strip()
+        if error:
+            return False, f"{line}\n    {error}"
+        return False, line
+    if report.get("capability") == "cooperative":
+        return True, _status_row(name, "ok — connector manual")
+    return True, _status_row(name, "ok")
+
+
+def _ordered_harnesses(reports: Mapping[str, Any]) -> list[str]:
+    names = [name for name in _HARNESS_LABELS if name in reports]
+    names.extend(name for name in reports if name not in _HARNESS_LABELS)
+    return names
+
+
+def _format_doctor(result: Mapping[str, Any]) -> str:
+    harnesses = result.get("harnesses")
+    harnesses = harnesses if isinstance(harnesses, dict) else {}
+    rows: list[str] = []
+    ok = True
+    for name in _ordered_harnesses(harnesses):
+        passed, row = _doctor_row(name, harnesses[name])
+        ok = ok and passed
+        rows.append(row)
+    title = "Specgate ok." if ok else "Specgate com falha."
+    return "\n".join([title, "", *rows])
+
+
+def _install_action(report: object) -> str:
+    if not isinstance(report, dict):
+        return "ok"
+    nested = report.get("adapter") or report.get("codex")
+    source = nested if isinstance(nested, dict) else report
+    if isinstance(source, dict):
+        for key in ("mcp", "skill", "bundle"):
+            value = source.get(key)
+            if value in _ACTION_LABELS:
+                return _ACTION_LABELS[value]
+    return "ok"
+
+
+def _format_install(result: Mapping[str, Any]) -> str:
+    if result.get("installed") is False:
+        return "Nenhum harness selecionado."
+    doctor = result.get("doctor")
+    if isinstance(doctor, dict) and isinstance(doctor.get("harnesses"), dict):
+        text = _format_doctor(doctor)
+        if doctor.get("status") == "configured_unverified":
+            error = str(doctor.get("error") or "").strip()
+            title = "Specgate instalado, verificação incompleta."
+            extra = f"\n    {error}" if error else ""
+            body = "\n".join(text.splitlines()[1:])
+            return f"{title}{extra}{body}"
+        return text.replace("Specgate ok.", "Specgate instalado.", 1).replace(
+            "Specgate com falha.", "Specgate instalado, com falha.", 1
+        )
+    harnesses = result.get("harnesses")
+    harnesses = harnesses if isinstance(harnesses, dict) else {}
+    rows = [
+        _status_row(name, _install_action(harnesses[name]))
+        for name in _ordered_harnesses(harnesses)
+    ]
+    return "\n".join(["Specgate instalado.", "", *rows])
+
+
+def _format_uninstall(result: Mapping[str, Any]) -> str:
+    harnesses = result.get("harnesses")
+    harnesses = harnesses if isinstance(harnesses, dict) else {}
+    rows = [
+        _status_row(name, _install_action(harnesses[name]))
+        for name in _ordered_harnesses(harnesses)
+    ]
+    if not rows:
+        return "Specgate removido."
+    return "\n".join(["Specgate removido.", "", *rows])
+
+
+def _format_update(result: Mapping[str, Any]) -> str:
+    text = _format_install(result)
+    return text.replace("instalado", "atualizado", 1)
+
+
+def _format_smoke(result: Mapping[str, Any]) -> str:
+    attached = result.get("attached_operation")
+    if isinstance(attached, dict) and attached.get("status") == "completed":
+        return "Smoke ok."
+    return "Smoke falhou."
+
+
+def format_public_report(command: str, result: Mapping[str, Any]) -> str:
+    """Render a short human status; JSON callers use emit_public_report."""
+    if command == "doctor":
+        return _format_doctor(result)
+    if command == "install":
+        return _format_install(result)
+    if command == "uninstall":
+        return _format_uninstall(result)
+    if command == "update":
+        return _format_update(result)
+    if command == "smoke":
+        return _format_smoke(result)
+    return ""
+
+
+def emit_public_report(
+    command: str,
+    result: Mapping[str, Any],
+    *,
+    as_json: bool,
+    stdout: TextIO,
+) -> None:
+    if as_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2), file=stdout)
+        return
+    print(format_public_report(command, result).rstrip(), file=stdout)
+
+
+def _doctor_failed(result: Mapping[str, Any]) -> bool:
+    harnesses = result.get("harnesses")
+    if not isinstance(harnesses, dict):
+        return False
+    return any(
+        isinstance(report, dict) and report.get("usable") is False
+        for report in harnesses.values()
+    )
 
 
 def _ask(prompt: str, stdin: TextIO, stderr: TextIO) -> str:
@@ -246,6 +403,14 @@ async def _smoke(project: Path, host: str, token: str) -> dict[str, Any]:
     }
 
 
+def _add_json_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Imprime o relatório em JSON",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Instalador público Specgate")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -257,15 +422,21 @@ def main() -> None:
         choices=tuple(public_harness_capabilities()),
     )
     install.add_argument("--yes", action="store_true")
+    _add_json_flag(install)
     doctor = commands.add_parser("doctor")
     doctor.add_argument("--project", type=Path, default=Path.cwd())
     doctor.add_argument("--timeout", type=float, default=30)
-    commands.add_parser("update")
+    _add_json_flag(doctor)
+    update = commands.add_parser("update")
+    _add_json_flag(update)
     smoke = commands.add_parser("smoke")
     smoke.add_argument("--host", required=True)
     smoke.add_argument("--project", type=Path, default=Path.cwd())
-    commands.add_parser("uninstall")
+    _add_json_flag(smoke)
+    uninstall = commands.add_parser("uninstall")
+    _add_json_flag(uninstall)
     args = parser.parse_args()
+    as_json = bool(getattr(args, "json", False))
 
     try:
         if args.command == "install":
@@ -277,7 +448,12 @@ def main() -> None:
                 stderr=sys.stderr,
             )
             if not selected:
-                print(json.dumps({"installed": False, "harnesses": []}))
+                emit_public_report(
+                    "install",
+                    {"installed": False, "harnesses": []},
+                    as_json=as_json,
+                    stdout=sys.stdout,
+                )
                 return
             host = prompt_host(args.host, stdin=sys.stdin, stderr=sys.stderr)
             api_key = prompt_api_key(stdin=sys.stdin, stderr=sys.stderr)
@@ -300,20 +476,19 @@ def main() -> None:
                     doctor_public_harnesses(args.project, timeout_seconds=args.timeout)
                 )
             except (ValueError, OSError, ExceptionGroup, RuntimeError) as error:
-                print(
-                    json.dumps(
-                        {"ok": False, "error": str(error)},
-                        ensure_ascii=False,
-                        indent=2,
+                if as_json:
+                    print(
+                        json.dumps(
+                            {"ok": False, "error": str(error)},
+                            ensure_ascii=False,
+                            indent=2,
+                        )
                     )
-                )
+                else:
+                    print(str(error))
                 raise SystemExit(1) from None
-            print(json.dumps(result, ensure_ascii=False, indent=2))
-            harnesses = result.get("harnesses")
-            if isinstance(harnesses, dict) and any(
-                isinstance(report, dict) and report.get("usable") is False
-                for report in harnesses.values()
-            ):
+            emit_public_report("doctor", result, as_json=as_json, stdout=sys.stdout)
+            if _doctor_failed(result):
                 raise SystemExit(1)
             return
         elif args.command == "update":
@@ -323,12 +498,26 @@ def main() -> None:
             result = asyncio.run(_smoke(args.project, _endpoint(args.host), api_key))
         else:
             result = uninstall_public_harnesses()
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        emit_public_report(args.command, result, as_json=as_json, stdout=sys.stdout)
+        if args.command == "install":
+            doctor_report = result.get("doctor")
+            if isinstance(doctor_report, dict) and _doctor_failed(doctor_report):
+                raise SystemExit(1)
     except KeyboardInterrupt:
         print("\nCancelado.", file=sys.stderr)
         raise SystemExit(130) from None
     except (ValueError, OSError, ExceptionGroup) as error:
-        parser.error(str(error))
+        if as_json:
+            print(
+                json.dumps(
+                    {"ok": False, "error": str(error)},
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            raise SystemExit(1) from None
+        print(str(error), file=sys.stderr)
+        raise SystemExit(1) from None
 
 
 if __name__ == "__main__":
