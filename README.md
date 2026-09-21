@@ -1,7 +1,7 @@
-<h1 align="center">Dev Decision</h1>
+<h1 align="center">Specgate</h1>
 
 <p align="center">
-  <em>Coding agents improvise on spec questions. Dev Decision asks Jev and keeps the answer typed.</em>
+  <em>Coding agents improvise on spec questions. Specgate asks Jev and keeps the answer typed.</em>
 </p>
 
 <p align="center">
@@ -20,8 +20,8 @@
 This repository is the MIT client: npm launcher, Python package, skills and harness adapters. It does not contain the MCP server, prompts, calibration or API-key admin.
 
 ```
-npx @felipeoff/dev-decision install
-npx @felipeoff/dev-decision doctor --project .
+npx @felipeoff/specgate install
+npx @felipeoff/specgate doctor --project .
 ```
 
 Then start `codex`, `claude`, Cursor, `grok` or Grok Bot as usual. That is the whole setup.
@@ -51,9 +51,9 @@ That is what makes it reasonable to put a decision on every grill question, ever
 
 ## Three minutes to the first routed skill
 
-1. You need a Dev Decision MCP host (`https://…/mcp`) and an API key for it. The key is not a TypeSafe or OpenRouter key; those live on the server.
-2. Run `npx @felipeoff/dev-decision install --host https://YOUR_MCP/mcp`. Pick the harnesses it found, or pass `--yes`. Paste the API key when asked; it is written to `~/.config/dev-decision/credentials/default.key` with mode `0600`.
-3. Run `npx @felipeoff/dev-decision doctor --project .` in the repo you will work in. Doctor checks runtime, SemVer handshake, auth and the tool catalog. It does not start a model turn.
+1. You need a Specgate MCP host (`https://…/mcp`) and an API key for it. The key is not a TypeSafe or OpenRouter key; those live on the server.
+2. Run `npx @felipeoff/specgate install --host https://YOUR_MCP/mcp`. Pick the harnesses it found, or pass `--yes`. Paste the API key when asked; it is written to `~/.config/specgate/credentials/default.key` with mode `0600`.
+3. Run `npx @felipeoff/specgate doctor --project .` in the repo you will work in. Doctor checks runtime, SemVer handshake, auth and the tool catalog. It does not start a model turn.
 4. Open the harness. Use `grill-with-jev` on a real scope question.
 
 A question Jev can close from `CONTEXT.md` and the authorized roots comes back as a typed result. A business choice, an authorization, or a gap after three evidence retries stays with you.
@@ -62,17 +62,17 @@ A question Jev can close from `CONTEXT.md` and the authorized roots comes back a
 
 | Agent | Install | Where it lands |
 | --- | --- | --- |
-| Codex | `npx @felipeoff/dev-decision install --harness codex` | `~/.agents/skills`, `~/.local/bin/dev-decision-codex` |
-| Claude Code | `npx @felipeoff/dev-decision install --harness claude-code` | `~/.claude/settings.json`, `~/.claude/skills` |
-| Cursor | `npx @felipeoff/dev-decision install --harness cursor` | `~/.cursor/skills`, `~/.local/bin/dev-decision-cursor` |
-| Grok Build | `npx @felipeoff/dev-decision install --harness grok-build` | `~/.grok/skills`, `~/.local/bin/dev-decision-grok-build` |
-| Grok Bot | `npx @felipeoff/dev-decision install --harness grok-bot` | `~/.dev-decision/grok-bot` |
+| Codex | `npx @felipeoff/specgate install --harness codex` | `~/.agents/skills`, `~/.local/bin/specgate-codex`, Codex MCP `specgate` |
+| Claude Code | `npx @felipeoff/specgate install --harness claude-code` | `~/.claude/settings.json` (`mcpServers.specgate` + hooks), `~/.claude/skills` |
+| Cursor | `npx @felipeoff/specgate install --harness cursor` | `~/.cursor/mcp.json`, `~/.cursor/skills`, `~/.local/bin/specgate-cursor` |
+| Grok Build | `npx @felipeoff/specgate install --harness grok-build` | `~/.grok/config.toml`, `~/.grok/skills`, `~/.local/bin/specgate-grok-build` |
+| Grok Bot | `npx @felipeoff/specgate install --harness grok-bot` | `~/.specgate/grok-bot` |
 
 `install` with no `--harness` detects what is on this machine and asks once per agent. Repeat installs keep foreign skills and config they do not own.
 
-Codex uses a controlled app-server client. Claude Code uses native `UserPromptSubmit` and `PreToolUse` hooks. Cursor and Grok Build use ACP. Grok Bot has no public interception contract: after install, copy `~/.dev-decision/grok-bot/dev-decision/GROK_BOT.md` as a private skill and attach the Custom MCP in the product. Doctor reports that limit instead of pretending the roundtrip was tested.
+Codex uses a controlled app-server client. Claude Code uses native `UserPromptSubmit` and `PreToolUse` hooks plus `mcpServers.specgate`. Cursor writes `~/.cursor/mcp.json`. Grok Build merges `[mcp_servers.specgate]` into `~/.grok/config.toml` (and `~/.grok/mcp.json` if that file already exists); the wrapper still injects the key for the ACP client. Grok Bot has no public interception contract: after install, copy `~/.specgate/grok-bot/specgate/GROK_BOT.md` as a private skill and attach the Custom MCP in the product. Doctor reports that limit instead of pretending the roundtrip was tested.
 
-Original binaries stay on `PATH`. Wrappers inject `DEV_DECISION_MCP_API_KEY` into that process only.
+Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `DEV_DECISION_MCP_API_KEY` for old clients) into that process only.
 
 ## Skills
 
@@ -90,11 +90,11 @@ Original binaries stay on `PATH`. Wrappers inject `DEV_DECISION_MCP_API_KEY` int
 
 | Command | What it does |
 | --- | --- |
-| `dev-decision install` | Detect harnesses, store the MCP key, install skills and wrappers |
-| `dev-decision doctor` | Runtime, handshake, auth and tool catalog, no model turn |
-| `dev-decision smoke` | Attached handshake + route + one mock tool. No paid inference |
-| `dev-decision update` | Explicit. New venv, previous kept as backup, restore on failure |
-| `dev-decision uninstall` | Remove plugin-managed files only |
+| `specgate install` | Detect harnesses, store the MCP key, install skills, wrappers and native MCP entries |
+| `specgate doctor` | Runtime, handshake, auth and tool catalog, no model turn |
+| `specgate smoke` | Attached handshake + route + one mock tool. No paid inference |
+| `specgate update` | Explicit. New venv, previous kept as backup, restore on failure |
+| `specgate uninstall` | Remove plugin-managed files only |
 
 There is no auto-update. A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed.
 
@@ -103,23 +103,23 @@ From a clone of this repository:
 ```
 python3 -m venv .venv
 .venv/bin/pip install .
-.venv/bin/dev-decision install --host https://YOUR_MCP/mcp
-.venv/bin/dev-decision doctor --project .
+.venv/bin/specgate install --host https://YOUR_MCP/mcp
+.venv/bin/specgate doctor --project .
 ```
 
 ## This repository
 
 | Path | What |
 | --- | --- |
-| `launcher/` | `npx @felipeoff/dev-decision` |
-| `src/dev_decision/` | Public Python client and harness adapters |
-| `src/dev_decision/skills/` | `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev` |
+| `launcher/` | `npx @felipeoff/specgate` |
+| `src/specgate/` | Public Python client and harness adapters |
+| `src/specgate/skills/` | `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev` |
 | `scripts/verify_release.py` | Version lock and SHA-256 of the exported tree |
 
 ## Privacy and safety
 
-- The API key is never a flag, never in harness config, never logged. Lookups: the credential file, or `DEV_DECISION_MCP_API_KEY` for local automation (still written only to that file).
-- Wrappers live in `~/.local/bin/dev-decision-*`. Profile: `~/.config/dev-decision/profiles/default.json`. Python runtime: `~/.local/share/dev-decision`.
+- The API key is never a flag, never in harness config, never logged. Lookups: the credential file, or `SPECGATE_MCP_API_KEY` (fallback `DEV_DECISION_MCP_API_KEY`) for local automation (still written only to that file).
+- Wrappers live in `~/.local/bin/specgate-*`. Profile: `~/.config/specgate/profiles/default.json`. Python runtime: `~/.local/share/specgate`.
 - Context sent to the MCP is the evidence you authorized for that call. Model provider keys never leave the server process.
 - The client talks to the host over HTTPS (HTTP only on loopback) and uses the system CAs.
 - No MCP, auth failure, or a protocol major mismatch: the harness continues and the decision stays in review.
@@ -128,10 +128,10 @@ python3 -m venv .venv
 ## Uninstall
 
 ```
-npx @felipeoff/dev-decision uninstall
+npx @felipeoff/specgate uninstall
 ```
 
-Removes the managed profile, credential, wrappers and skills this plugin wrote. Harness config it did not create stays. Delete `~/.local/share/dev-decision` yourself if you also want the venv gone.
+Removes the managed profile, credential, wrappers, Specgate MCP catalog entries and skills this plugin wrote. Harness config it did not create stays. Delete `~/.local/share/specgate` yourself if you also want the venv gone.
 
 ## License
 

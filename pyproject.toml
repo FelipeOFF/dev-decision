@@ -3,9 +3,9 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dev-decision-client"
+name = "specgate-client"
 version = "0.1.0"
-description = "Public clients and harness integrations for Dev Decision"
+description = "Public clients and harness integrations for Specgate"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
@@ -16,10 +16,10 @@ dependencies = [
 ]
 
 [project.scripts]
-dev-decision = "dev_decision.public_cli:main"
+specgate = "specgate.public_cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dev_decision"]
+packages = ["src/specgate"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/dev_decision", "README.md", "LICENSE"]
+include = ["src/specgate", "README.md", "LICENSE"]
