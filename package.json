@@ -11,6 +11,7 @@
   },
   "files": [
     "launcher/bin",
+    "launcher/package.json",
     "launcher/LICENSE",
     "src/specgate",
     "pyproject.toml",

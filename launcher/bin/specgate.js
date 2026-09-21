@@ -18,7 +18,16 @@ const root = join(homedir(), ".local", "share", "specgate");
 const venv = join(root, "venv");
 const runtime = join(venv, "bin", "python");
 const statePath = join(root, "current.json");
-const version = require("../package.json").version;
+
+function packageVersion() {
+  const candidates = [join(__dirname, "..", "..", "package.json"), join(__dirname, "..", "package.json")];
+  for (const file of candidates) {
+    if (existsSync(file)) return require(file).version;
+  }
+  throw new Error("Cannot find package.json for the Specgate launcher.");
+}
+
+const version = packageVersion();
 
 function publicClientRoot() {
   const candidates = [join(__dirname, "..", ".."), join(__dirname, "..")];
