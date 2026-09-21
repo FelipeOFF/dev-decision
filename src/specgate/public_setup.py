@@ -53,6 +53,7 @@ from specgate.product import (
 PROFILE = "default"
 _OWNER = "specgate"
 _WORKFLOW_SKILLS = (
+    "triage-jev",
     "grill-with-jev",
     "to-spec-jev",
     "to-tickets-jev",
@@ -210,7 +211,7 @@ def _workflow_manifest(target: Path) -> dict[str, Any] | None:
 def _install_workflow_skills(
     source_root: Path, skill_root: Path
 ) -> dict[str, SkillInstallStatus]:
-    """Install the four public workflow skills without touching foreign skills."""
+    """Install the public workflow skills without touching foreign skills."""
     reports: dict[str, SkillInstallStatus] = {}
     backups: dict[Path, Path | None] = {}
     backup_root = Path(tempfile.mkdtemp(prefix="dev-decision-skills-"))
