@@ -51,8 +51,8 @@
   },
   "provenance": {
     "generator": "scripts/export_public_release.py",
-    "source_repository": "FelipeOFF/dev-decision-server-mcp",
-    "source_revision": "67bee5ad995cb4f435d37dbf282c4e4ff0d00582"
+    "source_repository": "FelipeOFF/specgate-server-mcp",
+    "source_revision": "a6d79bb31f9294424f3c9970b1d37d0d2b9e7e59"
   },
   "schema": 1,
   "version": "0.1.0"
