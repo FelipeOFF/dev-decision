@@ -500,8 +500,8 @@ def main() -> None:
             result = uninstall_public_harnesses()
         emit_public_report(args.command, result, as_json=as_json, stdout=sys.stdout)
         if args.command == "install":
-            doctor = result.get("doctor")
-            if isinstance(doctor, dict) and _doctor_failed(doctor):
+            doctor_report = result.get("doctor")
+            if isinstance(doctor_report, dict) and _doctor_failed(doctor_report):
                 raise SystemExit(1)
     except KeyboardInterrupt:
         print("\nCancelado.", file=sys.stderr)

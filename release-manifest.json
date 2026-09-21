@@ -23,7 +23,7 @@
     "src/specgate/privacy.py": "4465638b65b658f0302f2a29487582bcfd6937cf6a15d6b951236c1729b802a6",
     "src/specgate/product.py": "7be5d1dc3dfb024d3b19294e196b5e4241c23d9eaa67a0f47adc65a98bcc7e89",
     "src/specgate/protocol.py": "d7cbdfdb8d53d49049a1eab34f0348593ca001f148e2cdd7f03b4572d6faa1df",
-    "src/specgate/public_cli.py": "525a6e2b5003cbc10851472488f84d6c23850ee15b823a668db3a7263f87a4b4",
+    "src/specgate/public_cli.py": "edeae4d87854f0db22e98b1f683aedb346ad267c000136b5609fa29ed49909a7",
     "src/specgate/public_gate_revision.py": "393b45c341c5e53d50e5c48ecefca38c05445c4994899cbb35e4196778caaa71",
     "src/specgate/public_setup.py": "785eeb5d46616f8443b7fe2ca8e07311ce46625675d1d09b086aa31cf288cc53",
     "src/specgate/recipe_inputs.py": "2585e021890a75f9583036021823525ec777374a02d9f1cb0535e0cd9ec69010",
@@ -50,7 +50,7 @@
   "provenance": {
     "generator": "scripts/export_public_release.py",
     "source_repository": "FelipeOFF/specgate-server-mcp",
-    "source_revision": "7316d49c5c27b1f8c029a6dd7b4ab2298a179b48"
+    "source_revision": "330a9bc2edcd544c779ee5611447cb1a72942216"
   },
   "schema": 1,
   "version": "0.1.0"
