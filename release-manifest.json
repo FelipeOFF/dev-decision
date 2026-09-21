@@ -17,6 +17,7 @@
     "src/specgate/grok_bot.py": "9407b8462872eabb306517a624a446417cb27621579b65134c76f43cb084bac8",
     "src/specgate/grok_build_client.py": "e303e655b9e9e66b98bc283c59268fa01c9286d959b9099ade3558cea2b11371",
     "src/specgate/grok_build_setup.py": "3b98baaef4bff3ec177b03e1f89a7581456e67f4a9623f1619eba3ed1e7131d2",
+    "src/specgate/identity_client.py": "7706b90d9a031bf5de396134fd68ce620f3a0886d7d91d30bb576824423cbd62",
     "src/specgate/mcp_catalog.py": "1e4ec14be7bf1c79e806c663966871ac46199b67ed1f9faf56f1ae3362c95e21",
     "src/specgate/privacy.py": "4465638b65b658f0302f2a29487582bcfd6937cf6a15d6b951236c1729b802a6",
     "src/specgate/product.py": "7be5d1dc3dfb024d3b19294e196b5e4241c23d9eaa67a0f47adc65a98bcc7e89",
@@ -48,7 +49,7 @@
   "provenance": {
     "generator": "scripts/export_public_release.py",
     "source_repository": "FelipeOFF/specgate-server-mcp",
-    "source_revision": "ae824db98b07bb6510356facfe5402ff9951cee9"
+    "source_revision": "0f8d4a8165fe0067d57ed7da69938207a2538d50"
   },
   "schema": 1,
   "version": "0.1.0"
