@@ -499,6 +499,7 @@ def _managed_targets(home: Path, harnesses: Sequence[HarnessName]) -> list[Path]
             targets.extend(_skill_targets(home / ".agents/skills"))
         elif harness == "claude-code":
             targets.append(home / ".claude/settings.json")
+            targets.append(home / ".claude.json")
             targets.extend(_skill_targets(home / ".claude/skills"))
         elif harness == "cursor":
             targets.append(home / ".cursor/mcp.json")
