@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <img src="docs/specgate-cover.jpg" alt="Specgate" width="880">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/works%20with-Codex%20%C2%B7%20Claude%20Code%20%C2%B7%20Cursor%20%C2%B7%20Grok%20Build%20%C2%B7%20Grok%20Bot-111111?style=flat-square" alt="Works with Codex, Claude Code, Cursor, Grok Build and Grok Bot">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
   <img src="https://img.shields.io/badge/python-3.12%2B-111111?style=flat-square" alt="Python 3.12+">
@@ -36,7 +40,7 @@ A coding agent can write a spec, open tickets and implement a slice without ever
 This package installs skills and an MCP client into the agents you already use. The harness keeps writing. [Jev](https://docs.typesafe.ai/concepts/system-one), TypeSafe's decision model, answers a typed question about the evidence you authorized: a choice, a claim, a screen, a ranking. The MCP call stays attached to the turn. There is no daemon, no callback later, no merge from a model.
 
 - One install for every harness it finds. `--harness` selects; `--yes` takes all of them.
-- Skills ship in English and run the same flow everywhere: `triage-jev` → `grill-with-jev` → `to-spec-jev` → `to-tickets-jev` → `implement-spec-jev` → `verify-spec-jev`.
+- Skills ship in English and run the same flow everywhere: `triage-jev` → `grill-with-jev` → `to-spec-jev` → `to-tickets-jev` → `implement-spec-jev` → `verify-spec-jev`. `iterate-with-jev` sits beside that flow: a `/iterate` comment is judged before the pull request branch moves.
 - Your MCP host, your API key. Model keys stay on the server. This package never logs the credential.
 - If the MCP is down, the harness still runs. The decision stays in human review. One warning per session.
 
@@ -85,8 +89,9 @@ Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `D
 | `to-tickets-jev` | Vertical ticket graph. One repository per ticket. |
 | `implement-spec-jev` | Walk the unblocked frontier in a worktree. |
 | `verify-spec-jev` | Last gate: every acceptance criterion against worktree evidence, before a draft PR. |
+| `iterate-with-jev` | Judge a `/iterate` comment with `jev_verify` before any push. Does not merge. |
 
-`verify-spec-jev` does not close issues, merge pull requests or publish packages. Those stay human.
+`verify-spec-jev` does not close issues, merge pull requests or publish packages. Those stay human. `iterate-with-jev` does not merge either.
 
 ## Commands
 
@@ -114,7 +119,7 @@ python3 -m venv .venv
 | Path | What |
 | --- | --- |
 | `src/specgate/` | Public Python client and harness adapters |
-| `src/specgate/skills/` | `triage-jev`, `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev` |
+| `src/specgate/skills/` | `triage-jev`, `grill-with-jev`, `to-spec-jev`, `to-tickets-jev`, `implement-spec-jev`, `verify-spec-jev`, `iterate-with-jev` |
 | `scripts/verify_release.py` | Version lock and SHA-256 of the exported tree |
 
 ## Privacy and safety
