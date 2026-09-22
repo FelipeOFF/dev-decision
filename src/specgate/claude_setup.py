@@ -23,6 +23,7 @@ from specgate.codex_setup import (
 from specgate.mcp_catalog import (
     entry_matches,
     json_http_server,
+    merge_json_mcp,
     remove_json_mcp,
     specgate_http_owned,
 )
@@ -111,6 +112,50 @@ def _hook_entries(
     }
 
 
+def _user_catalog(config_dir: Path) -> Path:
+    return config_dir.parent / ".claude.json"
+
+
+def _drop_settings_mcp(
+    settings: dict[str, Any], url: str, entry: dict[str, Any]
+) -> None:
+    servers = settings.get("mcpServers")
+    if not isinstance(servers, dict):
+        return
+    for name in (_NAME, LEGACY_MCP_SERVER):
+        existing = servers.get(name)
+        if existing is None:
+            continue
+        if entry_matches(existing, entry) or specgate_http_owned(existing, url):
+            servers.pop(name, None)
+    if not servers:
+        settings.pop("mcpServers", None)
+
+
+def _require_user_mcp(config_dir: Path, url: str) -> None:
+    message = (
+        "Claude Code has no specgate server in the user MCP registry (~/.claude.json)."
+    )
+    path = _user_catalog(config_dir)
+    if not path.is_file():
+        raise ValueError(message)
+    try:
+        value = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("Claude Code .claude.json is invalid.") from error
+    servers = value.get("mcpServers") if isinstance(value, dict) else None
+    entry = servers.get(_NAME) if isinstance(servers, dict) else None
+    if not specgate_http_owned(entry, url):
+        raise ValueError(message)
+
+
+def _restore_catalog(path: Path, previous: bytes | None) -> None:
+    if previous is None:
+        path.unlink(missing_ok=True)
+        return
+    path.write_bytes(previous)
+
+
 def _remove_entries(
     settings: dict[str, Any], entries: dict[str, dict[str, Any]]
 ) -> tuple[int, int]:
@@ -137,7 +182,7 @@ def install_claude(
     timeout_seconds: float = 30,
     token: str | None = None,
 ) -> ClaudeSetupReport:
-    """Install one managed skill and two native hooks without storing secrets."""
+    """Install the skill, native hooks, and the user-scoped Claude MCP server."""
     _validate_url(url)
     if timeout_seconds <= 0:
         raise ValueError("Timeout must be greater than zero.")
@@ -179,31 +224,11 @@ def install_claude(
         elif was_owned:
             owned[event] = entry
 
+    user_catalog = _user_catalog(config_dir)
+    catalog_bytes = user_catalog.read_bytes() if user_catalog.is_file() else None
     mcp_entry = json_http_server(url, include_type=True, token=token)
-    servers = settings.get("mcpServers")
-    if servers is None:
-        servers = {}
-        settings["mcpServers"] = servers
-    elif not isinstance(servers, dict):
-        raise ValueError("Claude Code settings.json contains invalid mcpServers.")
-    existing_mcp = servers.get(_NAME, servers.get(LEGACY_MCP_SERVER))
-    if (
-        existing_mcp is not None
-        and not specgate_http_owned(existing_mcp, url)
-        and not entry_matches(existing_mcp, mcp_entry)
-    ):
-        raise ValueError("The specgate MCP entry already has another configuration.")
-    mcp_status: Literal["created", "unchanged"] = (
-        "unchanged"
-        if _NAME in servers and entry_matches(servers.get(_NAME), mcp_entry)
-        else "created"
-    )
-    servers.pop(LEGACY_MCP_SERVER, None)
-    servers[_NAME] = mcp_entry
+    _drop_settings_mcp(settings, url, mcp_entry)
     previous_mcp = (previous or {}).get("mcp")
-    mcp_created = mcp_status == "created" or (
-        isinstance(previous_mcp, dict) and previous_mcp.get("created") is True
-    )
 
     source_files = _files(source)
     manifest = {
@@ -216,7 +241,8 @@ def install_claude(
         "mcp": {
             "name": _NAME,
             "url": url,
-            "created": bool(mcp_created),
+            "catalog": str(user_catalog),
+            "created": False,
         },
     }
     skill_status: Literal["created", "unchanged"] = (
@@ -226,8 +252,14 @@ def install_claude(
         and existing == target
         else "created"
     )
+    wrote_settings = False
     try:
+        mcp_status = merge_json_mcp(user_catalog, url, include_type=True, token=token)
+        manifest["mcp"]["created"] = mcp_status == "created" or (
+            isinstance(previous_mcp, dict) and previous_mcp.get("created") is True
+        )
         _write_settings(settings_path, settings)
+        wrote_settings = True
         if skill_status == "unchanged":
             _write_marker(target, manifest)
         else:
@@ -242,7 +274,9 @@ def install_claude(
             if existing != target and existing.exists():
                 shutil.rmtree(existing)
     except Exception:
-        _write_settings(settings_path, old_settings)
+        if wrote_settings:
+            _write_settings(settings_path, old_settings)
+        _restore_catalog(user_catalog, catalog_bytes)
         raise
     return {
         "skill": skill_status,
@@ -279,6 +313,7 @@ async def diagnose_claude(
     hooks = settings.get("hooks", {})
     if any(entry not in hooks.get(event, []) for event, entry in entries.items()):
         raise ValueError("The managed Claude Code hooks are missing.")
+    _require_user_mcp(config_dir, url)
     version = _run(claude_command, "--version")
     if version.returncode or not version.stdout.strip():
         raise ValueError("The Claude Code runtime is unavailable.")
@@ -299,6 +334,7 @@ async def diagnose_claude(
         },
         "mcp": {
             "url": url,
+            "registry": "user",
             "authentication": f"bearer_env:{TOKEN_ENV}",
             "transport": "streamable_http_sse",
             "tools": sorted(tools),
@@ -335,12 +371,22 @@ def uninstall_claude(config_dir: Path) -> ClaudeSetupReport:
     else:
         hooks_status = "absent"
     mcp = manifest.get("mcp")
+    mcp_url = str(mcp.get("url", "")) if isinstance(mcp, dict) else ""
+    mcp_created = isinstance(mcp, dict) and mcp.get("created") is True
     mcp_status = remove_json_mcp(
-        settings_path,
-        str(mcp.get("url", "")) if isinstance(mcp, dict) else "",
-        created=isinstance(mcp, dict) and mcp.get("created") is True,
+        _user_catalog(config_dir),
+        mcp_url,
+        created=mcp_created,
         include_type=True,
     )
+    legacy_status = remove_json_mcp(
+        settings_path,
+        mcp_url,
+        created=mcp_created,
+        include_type=True,
+    )
+    if mcp_status == "absent" and legacy_status == "removed":
+        mcp_status = "removed"
     if _owned_and_unchanged(target, manifest):
         shutil.rmtree(target)
         skill_status: Literal["removed", "preserved"] = "removed"

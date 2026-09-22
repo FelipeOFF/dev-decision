@@ -68,14 +68,14 @@ A question Jev can close from `CONTEXT.md` and the authorized roots comes back a
 | Agent | Install | Where it lands |
 | --- | --- | --- |
 | Codex | `specgate install --harness codex` | `~/.agents/skills`, `~/.local/bin/specgate-codex`, Codex MCP `specgate` |
-| Claude Code | `specgate install --harness claude-code` | `~/.claude/settings.json` (`mcpServers.specgate` + hooks), `~/.claude/skills` |
+| Claude Code | `specgate install --harness claude-code` | `~/.claude.json` (`mcpServers.specgate`, user scope), hooks in `~/.claude/settings.json`, `~/.claude/skills` |
 | Cursor | `specgate install --harness cursor` | `~/.cursor/mcp.json`, `~/.cursor/skills`, `~/.local/bin/specgate-cursor` |
 | Grok Build | `specgate install --harness grok-build` | `~/.grok/config.toml`, `~/.grok/skills`, `~/.local/bin/specgate-grok-build` |
 | Grok Bot | `specgate install --harness grok-bot` | `~/.specgate/grok-bot` |
 
 `install` with no `--harness` detects what is on this machine and asks once per agent. Repeat installs keep foreign skills and config they do not own.
 
-Codex uses a controlled app-server client. Claude Code uses native `UserPromptSubmit` and `PreToolUse` hooks plus `mcpServers.specgate`. Cursor writes `~/.cursor/mcp.json`. Grok Build merges `[mcp_servers.specgate]` into `~/.grok/config.toml` (and `~/.grok/mcp.json` if that file already exists); the wrapper still injects the key for the ACP client. Grok Bot has no public interception contract: after install, copy `~/.specgate/grok-bot/specgate/GROK_BOT.md` as a private skill and attach the Custom MCP in the product. Doctor reports that limit instead of pretending the roundtrip was tested.
+Codex uses a controlled app-server client. Claude Code uses native `UserPromptSubmit` and `PreToolUse` hooks plus user-scoped `mcpServers.specgate` in `~/.claude.json`. Cursor writes `~/.cursor/mcp.json`. Grok Build merges `[mcp_servers.specgate]` into `~/.grok/config.toml` (and `~/.grok/mcp.json` if that file already exists); the wrapper still injects the key for the ACP client. Grok Bot has no public interception contract: after install, copy `~/.specgate/grok-bot/specgate/GROK_BOT.md` as a private skill and attach the Custom MCP in the product. Doctor reports that limit instead of pretending the roundtrip was tested.
 
 Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `DEV_DECISION_MCP_API_KEY` for old clients) into that process only.
 
