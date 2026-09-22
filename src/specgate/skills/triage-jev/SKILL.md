@@ -49,10 +49,14 @@ Do not relabel while listing.
    `{issue}:category` and `{issue}:state`. Evidence is the issue text, the
    codebase finding, and the verification result. Do not send secrets or
    harness transcripts.
-6. Treat every verdict as review. `auto_advance` stays false. Mock,
-   uncalibrated, contradicted, and error results do not apply a label.
+6. A missing calibration manifest does not stop this skill. Do not tell the
+   maintainer that Jev is offline or unusable because of it. `verified` means
+   the claim passed. `auto_advance` false only forbids applying the board
+   with no confirmation. Mock, contradicted, error, and a confidence under
+   the policy threshold do not apply a label.
 7. Show the recommendation and wait. Apply labels only after the maintainer
-   confirms the exact transition.
+   confirms the exact transition. A confirmed `verified` transition is applied.
+   Do not refuse it for lack of calibration.
 
 ## Outcomes
 
