@@ -56,6 +56,7 @@ _ACTION_LABELS = {
     "preserved": "preservado",
     "absent": "ausente",
 }
+_MANUAL_CONNECTOR = "conector manual"
 
 
 def public_harness_setup_hints() -> dict[str, str]:
@@ -74,16 +75,14 @@ def _status_row(name: str, status: str) -> str:
 def _doctor_row(name: str, report: object) -> tuple[bool, str]:
     if not isinstance(report, dict):
         return False, _status_row(name, "falhou")
-    if report.get("usable") is True:
-        return True, _status_row(name, "ok")
     if report.get("usable") is False:
         line = _status_row(name, "falhou")
         error = str(report.get("error") or "").strip()
         if error:
             return False, f"{line}\n    {error}"
         return False, line
-    if report.get("capability") == "cooperative":
-        return True, _status_row(name, "ok — connector manual")
+    if name == "grok-bot":
+        return True, _status_row(name, _MANUAL_CONNECTOR)
     return True, _status_row(name, "ok")
 
 
@@ -104,6 +103,12 @@ def _format_doctor(result: Mapping[str, Any]) -> str:
         rows.append(row)
     title = "Specgate ok." if ok else "Specgate com falha."
     return "\n".join([title, "", *rows])
+
+
+def _harness_line(name: str, report: object) -> str:
+    if name == "grok-bot":
+        return _MANUAL_CONNECTOR
+    return _install_action(report)
 
 
 def _install_action(report: object) -> str:
@@ -137,7 +142,7 @@ def _format_install(result: Mapping[str, Any]) -> str:
     harnesses = result.get("harnesses")
     harnesses = harnesses if isinstance(harnesses, dict) else {}
     rows = [
-        _status_row(name, _install_action(harnesses[name]))
+        _status_row(name, _harness_line(name, harnesses[name]))
         for name in _ordered_harnesses(harnesses)
     ]
     return "\n".join(["Specgate instalado.", "", *rows])

@@ -24,7 +24,7 @@
     "src/specgate/privacy.py": "4465638b65b658f0302f2a29487582bcfd6937cf6a15d6b951236c1729b802a6",
     "src/specgate/product.py": "7be5d1dc3dfb024d3b19294e196b5e4241c23d9eaa67a0f47adc65a98bcc7e89",
     "src/specgate/protocol.py": "d7cbdfdb8d53d49049a1eab34f0348593ca001f148e2cdd7f03b4572d6faa1df",
-    "src/specgate/public_cli.py": "ae94e6d05a310b43ec4ee7b170451777e42e4da7f7d8cef0e04ac79d65944be7",
+    "src/specgate/public_cli.py": "1ba164b3c190b5713ea788b4537c40673a8b668c20a39bc4f6fbd21a02c2c0ed",
     "src/specgate/public_gate_revision.py": "393b45c341c5e53d50e5c48ecefca38c05445c4994899cbb35e4196778caaa71",
     "src/specgate/public_package.py": "ec8f4deb2febbe314026267d237e8400d9826dd53b6ad6c901d45a2cd228ab5f",
     "src/specgate/public_setup.py": "99fd65c31721ef7a7cb063175746899216e4ddc0abdeecc4b9439a72ceefa4cf",
