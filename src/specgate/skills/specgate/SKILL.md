@@ -17,7 +17,9 @@ conforme o pedido original; nunca remova uma restrição para obter uma escolha.
 `origin=policy` identifica uma saída definida pelas restrições, sem julgamento.
 Preserve `collect`, `review`, `error`, motivos da política e referências à avaliação.
 O cliente compartilha até três rodadas entre lacunas locais e semânticas e
-interrompe a coleta sem informação nova. Nenhum resultado atual autoriza avanço.
+interrompe a coleta sem informação nova. Um manifesto de calibração ausente não desliga o Jev. `verified` em
+`jev_verify` é um veredito usável depois da confirmação de quem mantém.
+`auto_advance` false só impede execução silenciosa.
 
 O piloto local disponibiliza `jev_verify`, `jev_screen` e `jev_find` via MCP
 autenticado, com mock heurístico. Confirme que as tools estão conectadas no harness.
