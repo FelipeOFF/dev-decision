@@ -100,10 +100,10 @@ Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `D
 | `specgate install` | Detect harnesses, store the MCP key, install skills, wrappers and native MCP entries |
 | `specgate doctor` | One status line per harness. `--json` for the full report |
 | `specgate smoke` | Attached handshake + route + one mock tool. No paid inference |
-| `specgate update` | Explicit. Refresh managed skills and wrappers from this package |
+| `specgate update` | Compare the installed commit with this repository's master. Reinstall only when it differs, then reapply the saved host, API key and harnesses |
 | `specgate uninstall` | Remove plugin-managed files only |
 
-There is no auto-update. A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed.
+A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed. If update cannot read either commit, or the reinstall fails, it stops before presenting a new package as applied.
 
 From a clone of this repository:
 
