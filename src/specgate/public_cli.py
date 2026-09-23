@@ -18,6 +18,7 @@ from specgate.product import (
     SKILL_SOURCE_ENV,
     mcp_api_key,
 )
+from specgate.public_package import PackageProbes, refresh_public_package
 from specgate.public_setup import (
     HarnessName,
     detect_public_harnesses,
@@ -26,7 +27,6 @@ from specgate.public_setup import (
     managed_project_id,
     public_harness_capabilities,
     uninstall_public_harnesses,
-    update_public_harnesses,
 )
 from specgate.routing import route_skills
 from specgate.transport import call_tool, negotiate_protocol
@@ -411,7 +411,13 @@ def _add_json_flag(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def main() -> None:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    home: Path | None = None,
+    codex_command: tuple[str, ...] = ("codex",),
+    probes: PackageProbes | None = None,
+) -> None:
     parser = argparse.ArgumentParser(description="Instalador público Specgate")
     commands = parser.add_subparsers(dest="command", required=True)
     install = commands.add_parser("install")
@@ -435,7 +441,7 @@ def main() -> None:
     _add_json_flag(smoke)
     uninstall = commands.add_parser("uninstall")
     _add_json_flag(uninstall)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     as_json = bool(getattr(args, "json", False))
 
     try:
@@ -492,7 +498,11 @@ def main() -> None:
                 raise SystemExit(1)
             return
         elif args.command == "update":
-            result = update_public_harnesses(_bundled_skills())
+            result = refresh_public_package(
+                home=home,
+                codex_command=codex_command,
+                probes=probes,
+            )
         elif args.command == "smoke":
             api_key = mcp_api_key()
             result = asyncio.run(_smoke(args.project, _endpoint(args.host), api_key))
