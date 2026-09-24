@@ -33,7 +33,7 @@
     "src/specgate/shared/domain/decisions.py": "0acf9947d84ccb2b0f5f3951b105be4cb299952ad896ce25272b293fb8acf015",
     "src/specgate/shared/domain/inputs.py": "00cd0a2ebea1d972c33e5c40f95ffe8aa3baef010156c111d23209ad55df1e47",
     "src/specgate/shared/ports/jev.py": "b08205ff2f6a04bcc99b472d7ffbe325c70f62246c0926a58a5a279e1e994884",
-    "src/specgate/skills/grill-with-jev/SKILL.md": "a023ad060d0751e4a36a35f01bba1be46611f270c3d755f36062358522c1b6ef",
+    "src/specgate/skills/grill-with-jev/SKILL.md": "8febee710b898e74ee62e60b32642767c92caf8f4ec22c4c886e6a421ad56899",
     "src/specgate/skills/implement-spec-jev/SKILL.md": "0b0e5b4158ab97d80442fbf7252da8e8f18c4bb1a347b1843cbadeb3083fe724",
     "src/specgate/skills/iterate-with-jev/SKILL.md": "fdc3d6e3a682556837740194dfeed55987fc01ccf3c0604a065665e241f0bbcf",
     "src/specgate/skills/specgate/GROK_BOT.md": "e625431944849bf978117ac1518a626d80f88135c594c9461abc7bfa44db61c0",

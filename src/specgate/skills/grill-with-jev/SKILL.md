@@ -9,6 +9,14 @@ Collect the objective, applicable rules, current artifact, explicit alternatives
 and evidence with its source and revision. Exclude secrets, session transcripts,
 and material outside the authorized project roots.
 
+Set each evidence revision to the sha256 of that evidence text before the call.
+Leave gaps, conflicts, and unexamined items empty. A complete packet reaches the
+model.
+
+When the reason starts with `insufficient_context:` and names the failed checks,
+repair those checks and retry the same question. That list is a packet repair.
+It does not mean Jev is off. Do not resend the same kind of revision.
+
 Work through the unresolved frontier one question at a time:
 
 1. Offer stable public option IDs. A recommendation is evidence, not a forced
