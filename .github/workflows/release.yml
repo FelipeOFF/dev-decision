@@ -22,14 +22,16 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - name: Verify synchronized versions
         run: python scripts/verify_release.py
-      - name: Build and hash artifacts
+      - name: Build and record wheel hashes
         run: |
           uv build
-          cd dist && sha256sum * > SHA256SUMS
+          python scripts/verify_release.py --stamp-wheels
       - name: Store verifiable artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-${{ github.event.release.tag_name }}
-          path: dist/
+          path: |
+            dist/
+            release-manifest.json
       - name: Publish Python package with trusted provenance
         run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz

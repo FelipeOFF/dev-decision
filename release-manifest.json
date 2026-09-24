@@ -1,12 +1,12 @@
 {
   "files": {
     ".github/workflows/ci.yml": "32b28f2e92a7d415a1687d4cadf540c84adfff4b8910be6388920eae662e7c3a",
-    ".github/workflows/release.yml": "a77d3551adb4d9bf284bdbc8b3525673d6706d57b642f8d1a9c604123a50470f",
+    ".github/workflows/release.yml": "f857a453765614bc549b170a845b18142349fccd7c1a2b52eb45f50cbe0f5d62",
     "LICENSE": "4c38401ce1ce9aee51321b14df43ce9c7827beae38522fd87b79d1bec2753114",
-    "README.md": "9c6b6add5f654a9216f87eabf9c45253e4c962841820160fb780e71b80b13adf",
+    "README.md": "80f79b5e96b6b8b7c569a9379c74f01637ea4a96cb5788b2e9f32cec3c77f969",
     "docs/specgate-cover.jpg": "1d1237e72bc63eb64e2b86707c520ebb6062cb4bd99e19313ffddc872a5b5635",
     "pyproject.toml": "6297d4010acdff27a14569aff68830774f2bfdb4be848c3b739735050ee9bb8d",
-    "scripts/verify_release.py": "60424048edd2a630ba750d8b511578289fbbe2b03f4b57051ee611858c26f19c",
+    "scripts/verify_release.py": "369573e65911814fd6a266bdb36c3d333b28e4c62b3160b7338735677336d460",
     "src/specgate/claude_hook.py": "e58104cc0a1f67cbf15b49fb49976eb21c3c7708a79bb3377b84201955d9ae88",
     "src/specgate/claude_setup.py": "c73a041d13f7e61636b04e05b343d2ac837d4c0d6227615bc8c9aafd4353bd3c",
     "src/specgate/client.py": "3be446b6750f155395cf2edb76dc9b052d31a44059e53e9a016fbc43cb73541c",
