@@ -384,11 +384,21 @@ async def _smoke(project: Path, host: str, token: str) -> dict[str, Any]:
         project_id=project_id,
     )
     content = operation.structured_content
-    if operation.is_error or content is None or content.get("mode") != "mock":
-        raise ValueError("Local smoke requires a successful mock MCP operation.")
+    if operation.is_error or not isinstance(content, dict):
+        raise ValueError("Smoke requires a completed attached MCP operation.")
+    mode = content.get("mode")
+    if content.get("auto_advance") is True or content.get("calibrated") is True:
+        raise ValueError("Smoke must not enable a gate or calibration.")
+    if mode not in {"mock", "real"}:
+        raise ValueError("Smoke requires a completed attached MCP operation.")
     candidate = route.get("candidate")
+    calls = content.get("provider_calls")
+    paid_calls = (
+        0 if mode == "mock" else len(calls) if isinstance(calls, list) else 1
+    )
     return {
-        "paid_calls": 0,
+        "paid_calls": paid_calls,
+        "calibration_calls": 0,
         "protocol": {
             "client_version": protocol.client_version,
             "server_version": protocol.server_version,
@@ -402,7 +412,9 @@ async def _smoke(project: Path, host: str, token: str) -> dict[str, Any]:
         "attached_operation": {
             "status": "completed",
             "action": content.get("action"),
-            "mode": content["mode"],
+            "mode": mode,
+            "auto_advance": False,
+            "calibrated": False,
         },
         "harnesses": public_harness_capabilities(),
     }
