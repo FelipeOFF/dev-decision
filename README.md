@@ -29,6 +29,8 @@ specgate install
 specgate doctor --project .
 ```
 
+`pipx install specgate-client==<version>` installs the same `specgate` command once that version is on PyPI. Until then, use the git command above.
+
 Then start `codex`, `claude`, Cursor, `grok` or Grok Bot as usual. That is the whole setup.
 
 macOS or Linux, Python 3.12+, [pipx](https://pipx.pypa.io/). The installer lists the harnesses on this machine with their limits, lets you toggle each one (`a` installs on all of them), asks for the MCP host and API key, and stores the key in an owner-only file. Never pass the key on the command line. `--harness` and `--host` skip those prompts; `--yes` takes every detected harness.
@@ -100,10 +102,10 @@ Original binaries stay on `PATH`. Wrappers inject `SPECGATE_MCP_API_KEY` (and `D
 | `specgate install` | Detect harnesses, store the MCP key, install skills, wrappers and native MCP entries |
 | `specgate doctor` | One status line per harness. `--json` for the full report |
 | `specgate smoke` | Attached handshake + route + one mock tool. No paid inference |
-| `specgate update` | Compare the installed commit with this repository's master. Reinstall only when it differs, then reapply the saved host, API key and harnesses |
+| `specgate update` | Explicit. Refresh managed skills and wrappers from this package |
 | `specgate uninstall` | Remove plugin-managed files only |
 
-A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed. If update cannot read either commit, or the reinstall fails, it stops before presenting a new package as applied.
+There is no auto-update. A failed install rolls back every destination in that transaction, including a harness that succeeded before a later one failed.
 
 From a clone of this repository:
 
